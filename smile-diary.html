@@ -1,0 +1,1833 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DAY BLOOM</title>
+<meta name="theme-color" id="themeColorMeta" content="#7C5CFC" />
+<link rel="manifest" href="manifest.json" />
+<link rel="apple-touch-icon" href="day-bloom-icon-180.png" />
+<meta name="apple-mobile-web-app-title" content="DAY BLOOM" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<link id="favicon" rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2048%2048%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%237C5CFC%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23B388FF%22%2F%3E%3C%2FlinearGradient%3E%3C%2Fdefs%3E%3Crect%20width%3D%2248%22%20height%3D%2248%22%20rx%3D%2212%22%20fill%3D%22url%28%23g%29%22%2F%3E%3Cg%20fill%3D%22%23ffffff%22%3E%3Ccircle%20cx%3D%2224%22%20cy%3D%2212.4%22%20r%3D%227.6%22%2F%3E%3Ccircle%20cx%3D%2235.04%22%20cy%3D%2220.42%22%20r%3D%227.6%22%2F%3E%3Ccircle%20cx%3D%2230.82%22%20cy%3D%2233.38%22%20r%3D%227.6%22%2F%3E%3Ccircle%20cx%3D%2217.18%22%20cy%3D%2233.38%22%20r%3D%227.6%22%2F%3E%3Ccircle%20cx%3D%2212.96%22%20cy%3D%2220.42%22%20r%3D%227.6%22%2F%3E%3C%2Fg%3E%3Ccircle%20cx%3D%2224%22%20cy%3D%2224%22%20r%3D%226.0%22%20fill%3D%22%237C5CFC%22%2F%3E%3C%2Fsvg%3E" />
+<style>
+  :root{
+    --purple:#7C5CFC;
+    --purple-soft:#EDE7FF;
+    --purple-accent:#B388FF;
+    --bg:#FFFFFF;
+    --bg-soft:#F7F5FF;
+    --text:#2A2440;
+    --text-soft:#7A7392;
+    --line:#ECE8F7;
+    --radius:20px;
+    --shadow:0 8px 30px rgba(124,92,252,.10);
+    --shadow-sm:0 3px 12px rgba(124,92,252,.08);
+    --fs:16px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{font-size:var(--fs)}
+  body{
+    font-family:'Pretendard','Apple SD Gothic Neo','Malgun Gothic',system-ui,sans-serif;
+    background:linear-gradient(180deg,var(--bg-soft) 0%,var(--bg) 320px);
+    color:var(--text);
+    line-height:1.55;
+    min-height:100vh;
+    padding:0 0 64px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1160px;margin:0 auto;padding:0 20px}
+
+  /* Header */
+  header{padding:34px 0 22px;display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:16px}
+  .brand{display:flex;align-items:center;gap:12px}
+  .logo-mark{
+    width:46px;height:46px;border-radius:14px;
+    background:linear-gradient(135deg,var(--purple),var(--purple-accent));
+    display:grid;place-items:center;color:#fff;font-size:24px;box-shadow:var(--shadow-sm);
+  }
+  /* 처음 열 때 꽃잎이 한 번 살짝 피어나는 효과 (1회, 부드럽게) */
+  @keyframes petalBloom{0%{opacity:0;transform:scale(0)}60%{opacity:1;transform:scale(1.12)}100%{opacity:1;transform:scale(1)}}
+  @keyframes coreBloom{0%{opacity:0;transform:scale(0)}100%{opacity:1;transform:scale(1)}}
+  .logo-mark svg circle{transform-box:fill-box;transform-origin:center;animation:petalBloom .5s cubic-bezier(.34,1.4,.5,1) backwards}
+  .logo-mark svg circle:nth-child(1){animation-delay:.05s}
+  .logo-mark svg circle:nth-child(2){animation-delay:.12s}
+  .logo-mark svg circle:nth-child(3){animation-delay:.19s}
+  .logo-mark svg circle:nth-child(4){animation-delay:.26s}
+  .logo-mark svg circle:nth-child(5){animation-delay:.33s}
+  .logo-mark svg circle:nth-child(6){animation:coreBloom .4s ease backwards;animation-delay:.42s}
+  @media (prefers-reduced-motion: reduce){.logo-mark svg circle{animation:none}}
+  .brand h1{font-size:1.7rem;letter-spacing:-.5px}
+  .brand .sub{color:var(--text-soft);font-size:.9rem;margin-top:2px}
+  .head-right{text-align:right}
+  .today-date{font-size:1.05rem;font-weight:600}
+  .quote{color:var(--purple);font-size:.92rem;margin-top:4px;font-style:italic;cursor:pointer}
+  .quote:hover{text-decoration:underline}
+  .btn-settings{
+    margin-top:8px;border:1px solid var(--line);background:#fff;color:var(--text-soft);
+    padding:6px 14px;border-radius:999px;font-size:.82rem;cursor:pointer;transition:.15s;
+  }
+  .btn-settings:hover{border-color:var(--purple-accent);color:var(--purple)}
+
+  /* Grid */
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;align-items:start}
+  .col-span-2{grid-column:span 2}
+  .col-span-3{grid-column:span 3}
+  @media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}.col-span-2{grid-column:span 2}.col-span-3{grid-column:span 2}}
+  @media(max-width:640px){.grid{grid-template-columns:1fr}.col-span-2{grid-column:span 1}.col-span-3{grid-column:span 1}}
+
+  /* Card */
+  .card{
+    background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+    padding:22px;box-shadow:var(--shadow-sm);transition:box-shadow .2s;
+  }
+  .card:hover{box-shadow:var(--shadow)}
+  .card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+  .card-title{display:flex;align-items:center;gap:9px;font-size:.78rem;font-weight:700;letter-spacing:1.2px;color:var(--purple);text-transform:uppercase}
+  .card-title .dot{width:9px;height:9px;border-radius:50%;background:var(--purple-accent)}
+  .mini-btn{
+    border:none;background:var(--purple-soft);color:var(--purple);width:30px;height:30px;
+    border-radius:10px;font-size:1.1rem;cursor:pointer;display:grid;place-items:center;transition:.15s;
+  }
+  .mini-btn:hover{background:var(--purple);color:#fff}
+
+  /* Goals */
+  .goal-list,.memo-list,.daily-list,.vision-grid{list-style:none}
+  .goal-item{display:flex;align-items:flex-start;gap:10px;padding:11px 0;border-bottom:1px dashed var(--line)}
+  .goal-item:last-child{border-bottom:none}
+  .goal-check{
+    margin-top:2px;width:22px;height:22px;min-width:22px;border:2px solid var(--purple-accent);border-radius:7px;
+    cursor:pointer;display:grid;place-items:center;color:#fff;font-size:.8rem;transition:.15s;
+  }
+  .goal-check.done{background:var(--purple);border-color:var(--purple)}
+  .goal-body{flex:1;min-width:0}
+  .goal-body .name{font-weight:600;word-break:break-word}
+  .goal-item.done .name{text-decoration:line-through;color:var(--text-soft)}
+  .goal-meta{display:flex;gap:6px;margin-top:5px;flex-wrap:wrap}
+  .tag{font-size:.7rem;padding:2px 9px;border-radius:999px;background:var(--purple-soft);color:var(--purple);font-weight:600}
+  .tag.pri-높음{background:#ffe2ec;color:#e0457b}
+  .tag.pri-보통{background:#ede7ff;color:#7C5CFC}
+  .tag.pri-낮음{background:#e9f6ee;color:#3fa971}
+  .row-actions{display:flex;gap:4px;opacity:0;transition:.15s}
+  .goal-item:hover .row-actions,.memo-card:hover .row-actions,.daily-item:hover .row-actions{opacity:1}
+  .icon-btn{border:none;background:transparent;cursor:pointer;color:var(--text-soft);font-size:.85rem;padding:3px 5px;border-radius:6px}
+  .icon-btn:hover{background:var(--bg-soft);color:var(--purple)}
+
+  /* Quick add */
+  .quick-grid{display:grid;grid-template-columns:1fr;gap:11px}
+  .quick-btn{
+    display:flex;align-items:center;gap:12px;width:100%;text-align:left;cursor:pointer;
+    border:1.5px solid var(--line);background:#fff;border-radius:14px;padding:14px 16px;transition:.15s;font-size:1rem;color:var(--text);
+  }
+  .quick-btn:hover{border-color:var(--purple-accent);background:var(--bg-soft);transform:translateY(-1px)}
+  .quick-btn .q-ico{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;font-size:1.2rem;background:var(--purple-soft);color:var(--purple)}
+  .quick-btn b{display:block}
+  .quick-btn span{font-size:.8rem;color:var(--text-soft)}
+
+  /* Daily */
+  .filter-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+  .chip{border:1px solid var(--line);background:#fff;color:var(--text-soft);font-size:.78rem;padding:5px 12px;border-radius:999px;cursor:pointer;transition:.15s}
+  .chip.active{background:var(--purple);color:#fff;border-color:var(--purple)}
+  .daily-item{padding:13px;border:1px solid var(--line);border-radius:14px;margin-bottom:10px;transition:.15s;cursor:pointer}
+  .daily-item:hover{border-color:var(--purple-accent);background:var(--bg-soft)}
+  .daily-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .daily-top .title{font-weight:700}
+  .daily-top .date{font-size:.76rem;color:var(--text-soft)}
+  .daily-tags{display:flex;gap:6px;margin-top:7px;flex-wrap:wrap;align-items:center}
+  .daily-content{font-size:.88rem;color:var(--text-soft);margin-top:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .mood{font-size:.95rem}
+
+  /* Memo */
+  .memo-search{width:100%;border:1px solid var(--line);border-radius:11px;padding:9px 13px;font-size:.9rem;margin-bottom:12px;outline:none}
+  .memo-search:focus{border-color:var(--purple-accent)}
+  .memo-card{background:var(--bg-soft);border:1px solid var(--line);border-radius:13px;padding:12px 13px;margin-bottom:10px;position:relative}
+  .memo-card.pinned{border-color:var(--purple-accent);background:linear-gradient(180deg,#fbf9ff,#f3efff)}
+  .memo-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+  .memo-text{flex:1;word-break:break-word;white-space:pre-wrap;font-size:.92rem}
+  .memo-card.status-완료 .memo-text{text-decoration:line-through;color:var(--text-soft)}
+  .memo-meta{display:flex;gap:6px;align-items:center;margin-top:8px}
+  .status-sel{font-size:.72rem;border:1px solid var(--line);border-radius:999px;padding:2px 6px;color:var(--text-soft);background:#fff;cursor:pointer}
+
+  /* Vision */
+  .vision-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:11px}
+  .vision-cell{position:relative;border-radius:14px;overflow:hidden;border:1px solid var(--line);aspect-ratio:1/1;background:var(--bg-soft)}
+  .vision-cell img{width:100%;height:100%;object-fit:cover;display:block}
+  .vision-cell.main{outline:3px solid var(--purple-accent);outline-offset:-3px}
+  .vision-cap{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(0deg,rgba(42,36,64,.78),transparent);color:#fff;font-size:.74rem;padding:18px 9px 7px;font-weight:500}
+  .vision-tools{position:absolute;top:6px;right:6px;display:flex;gap:4px;opacity:0;transition:.15s}
+  .vision-cell:hover .vision-tools{opacity:1}
+  .vision-tools button{border:none;background:rgba(255,255,255,.92);border-radius:8px;width:26px;height:26px;cursor:pointer;font-size:.8rem}
+  .vision-add{border:2px dashed var(--purple-accent);border-radius:14px;display:grid;place-items:center;cursor:pointer;color:var(--purple);aspect-ratio:1/1;background:var(--bg-soft);transition:.15s}
+  .vision-add:hover{background:var(--purple-soft)}
+  .vision-add div{text-align:center;font-size:.8rem}
+  .vision-add .plus{font-size:1.8rem;line-height:1}
+
+  /* Weather */
+  .weather-card{background:linear-gradient(135deg,var(--purple),var(--purple-accent));color:#fff;border:none}
+  .weather-card .card-title{color:#fff}
+  .weather-card .card-title .dot{background:#fff}
+  .w-main{display:flex;align-items:center;gap:14px;margin:6px 0 12px}
+  .w-icon{font-size:3rem;line-height:1}
+  .w-temp{font-size:2.4rem;font-weight:700}
+  .w-desc{font-size:.95rem;opacity:.92}
+  .w-stats{display:flex;gap:18px;flex-wrap:wrap;font-size:.85rem;opacity:.95}
+  .w-stats b{display:block;font-size:1.05rem}
+  .w-tip{margin-top:14px;background:rgba(255,255,255,.18);border-radius:12px;padding:10px 13px;font-size:.88rem}
+  .w-link{margin-top:10px;font-size:.78rem;opacity:.9;text-decoration:underline;cursor:pointer;background:none;border:none;color:#fff;padding:0}
+
+  /* Calendar */
+  .cal-nav{display:flex;align-items:center;gap:10px}
+  .cal-nav button{border:1px solid var(--line);background:#fff;width:30px;height:30px;border-radius:9px;cursor:pointer;color:var(--purple);font-size:1rem;transition:.15s}
+  .cal-nav button:hover{background:var(--purple-soft)}
+  .cal-title{font-weight:700;min-width:96px;text-align:center}
+  .cal-today-btn{font-size:.74rem;border:1px solid var(--line);background:#fff;color:var(--text-soft);padding:4px 10px;border-radius:999px;cursor:pointer}
+  .cal-today-btn:hover{border-color:var(--purple-accent);color:var(--purple)}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+  .cal-dow{text-align:center;font-size:.74rem;font-weight:700;color:var(--text-soft);padding-bottom:4px}
+  .cal-dow.sun{color:#e0457b}.cal-dow.sat{color:#2d7cf0}
+  .cal-cell{min-height:78px;border:1px solid var(--line);border-radius:12px;padding:6px 7px;cursor:pointer;transition:.15s;display:flex;flex-direction:column;gap:3px;overflow:hidden;background:#fff}
+  .cal-cell:hover{border-color:var(--purple-accent);background:var(--bg-soft)}
+  .cal-cell.empty{border:none;background:transparent;cursor:default}
+  .cal-cell.today{border-color:var(--purple);box-shadow:inset 0 0 0 1px var(--purple)}
+  .cal-cell.today .cal-num{background:var(--purple);color:#fff;border-radius:50%;width:22px;height:22px;display:grid;place-items:center}
+  .cal-num{font-size:.8rem;font-weight:600}
+  .cal-num.sun{color:#e0457b}.cal-num.sat{color:#2d7cf0}
+  .cal-dots{display:flex;gap:3px;flex-wrap:wrap}
+  .cal-dot{width:7px;height:7px;border-radius:50%}
+  .cal-todo{font-size:.68rem;line-height:1.25;background:var(--purple-soft);color:var(--purple);border-radius:5px;padding:1px 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+  .cal-todo.done{text-decoration:line-through;opacity:.55;background:var(--line);color:var(--text-soft)}
+  .cal-more{font-size:.66rem;color:var(--text-soft)}
+  .cal-legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:13px;font-size:.74rem;color:var(--text-soft)}
+  .cal-legend span{display:inline-flex;align-items:center;gap:5px}
+  @media(max-width:640px){.cal-cell{min-height:58px}.cal-todo{display:none}.cal-dots{margin-top:auto}}
+
+  /* Day detail / Todo list inside modal */
+  .day-section-title{font-size:.78rem;font-weight:700;color:var(--purple);letter-spacing:.5px;margin:14px 0 8px}
+  .todo-row{display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px dashed var(--line)}
+  .todo-row:last-child{border-bottom:none}
+  .todo-check{width:20px;height:20px;min-width:20px;border:2px solid var(--purple-accent);border-radius:6px;cursor:pointer;display:grid;place-items:center;color:#fff;font-size:.7rem}
+  .todo-check.done{background:var(--purple);border-color:var(--purple)}
+  .todo-row .t-text{flex:1;word-break:break-word}
+  .todo-row.done .t-text{text-decoration:line-through;color:var(--text-soft)}
+  .day-record{padding:10px;border:1px solid var(--line);border-radius:11px;margin-bottom:8px;font-size:.88rem}
+  .day-add{display:flex;gap:8px;margin-top:10px}
+  .day-add input{flex:1;border:1.5px solid var(--line);border-radius:11px;padding:9px 12px;font-size:.92rem;outline:none;font-family:inherit}
+  .day-add input:focus{border-color:var(--purple-accent)}
+
+  /* Modal */
+  .overlay{position:fixed;inset:0;background:rgba(42,36,64,.45);backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;z-index:50;padding:18px}
+  .overlay.open{display:flex}
+  .modal{background:#fff;border-radius:22px;width:100%;max-width:520px;max-height:90vh;overflow:auto;padding:26px;box-shadow:0 20px 60px rgba(42,36,64,.3)}
+  .modal h2{font-size:1.25rem;margin-bottom:18px}
+  .field{margin-bottom:14px}
+  .field label{display:block;font-size:.82rem;font-weight:600;color:var(--text-soft);margin-bottom:6px}
+  .field input,.field textarea,.field select{
+    width:100%;border:1.5px solid var(--line);border-radius:12px;padding:11px 13px;font-size:.95rem;font-family:inherit;outline:none;transition:.15s;background:#fff;color:var(--text);
+  }
+  .field input:focus,.field textarea:focus,.field select:focus{border-color:var(--purple-accent)}
+  .field textarea{resize:vertical;min-height:80px}
+  .field-row{display:flex;gap:12px}
+  .field-row .field{flex:1}
+  .mood-picker{display:flex;gap:8px;flex-wrap:wrap}
+  .mood-opt{border:1.5px solid var(--line);border-radius:12px;padding:8px 12px;cursor:pointer;font-size:.85rem;transition:.15s}
+  .mood-opt.active{border-color:var(--purple);background:var(--purple-soft);color:var(--purple);font-weight:600}
+  .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:8px}
+  .btn{border:none;border-radius:12px;padding:11px 20px;font-size:.92rem;cursor:pointer;font-weight:600;transition:.15s;font-family:inherit}
+  .btn-primary{background:var(--purple);color:#fff}
+  .btn-primary:hover{background:#6a48f0}
+  .btn-ghost{background:var(--bg-soft);color:var(--text-soft)}
+  .btn-ghost:hover{background:var(--line)}
+  .btn-danger{background:#ffe2ec;color:#e0457b}
+
+  .empty{color:var(--text-soft);font-size:.88rem;text-align:center;padding:22px 0}
+  .count-badge{font-size:.72rem;background:var(--purple-soft);color:var(--purple);border-radius:999px;padding:2px 9px;font-weight:700;margin-left:6px}
+  .footer{text-align:center;color:var(--text-soft);font-size:.78rem;margin-top:40px}
+
+  /* Settings swatches */
+  .swatches{display:flex;gap:10px;flex-wrap:wrap}
+  .swatch{width:34px;height:34px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:.15s}
+  .swatch.active{border-color:var(--text)}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--text);color:#fff;padding:11px 20px;border-radius:999px;font-size:.85rem;opacity:0;transition:.25s;z-index:99;pointer-events:none;display:flex;align-items:center}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
+  .toast-undo{margin-left:12px;background:var(--purple-accent);color:#fff;border:none;border-radius:8px;padding:4px 11px;font-size:.8rem;cursor:pointer;font-weight:700}
+  .toast-undo:hover{filter:brightness(1.08)}
+  .offline-chip{display:inline-block;font-size:.7rem;font-weight:600;color:#9a93ab;background:#f0eef7;border:1px solid var(--line);border-radius:999px;padding:1px 9px;vertical-align:middle;margin-left:4px}
+  /* 온보딩(첫 방문 환영 카드) */
+  .ob-hero{text-align:center;margin-bottom:6px}
+  .ob-mark{width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,var(--purple),var(--purple-accent));display:inline-grid;place-items:center;margin-bottom:10px}
+  .ob-tips{list-style:none;margin:14px 0 4px;padding:0}
+  .ob-tips li{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px dashed var(--line)}
+  .ob-tips li:last-child{border-bottom:none}
+  .ob-tips .ob-ico{font-size:1.3rem;width:34px;text-align:center;flex:none}
+  .ob-tips b{display:block;font-size:.95rem}
+  .ob-tips span{font-size:.82rem;color:var(--text-soft)}
+  /* 키보드 포커스 표시 (접근성) */
+  :focus-visible{outline:2px solid var(--purple);outline-offset:2px;border-radius:6px}
+  .weather-card :focus-visible{outline-color:#fff}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="logo-mark" aria-label="DAY BLOOM 로고">
+        <svg width="30" height="30" viewBox="0 0 24 24" role="img" aria-hidden="true">
+          <circle cx="12" cy="6.2" r="3.8" fill="#fff"/>
+          <circle cx="17.52" cy="10.21" r="3.8" fill="#fff"/>
+          <circle cx="15.41" cy="16.69" r="3.8" fill="#fff"/>
+          <circle cx="8.59" cy="16.69" r="3.8" fill="#fff"/>
+          <circle cx="6.48" cy="10.21" r="3.8" fill="#fff"/>
+          <circle cx="12" cy="12" r="3.0" fill="var(--purple)"/>
+        </svg>
+      </div>
+      <div>
+        <h1>DAY BLOOM</h1>
+        <div class="sub">나만의 하루를 피워내는 공간</div>
+      </div>
+    </div>
+    <div class="head-right">
+      <div class="today-date"><span id="todayDate"></span> <span id="offlineChip" class="offline-chip" style="display:none">● 오프라인</span></div>
+      <div class="quote" id="dailyQuote" title="클릭하면 다른 문구로 바뀌어요"></div>
+      <button class="btn-settings" onclick="openSettings()">⚙ 설정</button>
+    </div>
+  </header>
+
+  <div class="grid">
+    <!-- GOAL -->
+    <section class="card">
+      <div class="card-head">
+        <div class="card-title"><span class="dot"></span>Goal<span class="count-badge" id="goalCount">0</span></div>
+        <button class="mini-btn" onclick="openGoalModal()" title="목표 추가">+</button>
+      </div>
+      <ul class="goal-list" id="goalList"></ul>
+    </section>
+
+    <!-- QUICK ADD -->
+    <section class="card">
+      <div class="card-head"><div class="card-title"><span class="dot"></span>Quick Add</div></div>
+      <div class="quick-grid">
+        <button class="quick-btn" onclick="openDailyModal()">
+          <span class="q-ico">📝</span><span><b>오늘 기록 추가</b><span>하루를 기록해요</span></span>
+        </button>
+        <button class="quick-btn" onclick="openTodoModal()">
+          <span class="q-ico">✅</span><span><b>할 일 추가</b><span>날짜를 정해 캘린더에</span></span>
+        </button>
+        <button class="quick-btn" onclick="openMemoModal()">
+          <span class="q-ico">💡</span><span><b>메모 추가</b><span>떠오른 생각을 빠르게</span></span>
+        </button>
+        <button class="quick-btn" onclick="openGoalModal()">
+          <span class="q-ico">🎯</span><span><b>목표 추가</b><span>이루고 싶은 것</span></span>
+        </button>
+      </div>
+    </section>
+
+    <!-- WEATHER -->
+    <section class="card weather-card" id="weatherCard">
+      <div class="card-head"><div class="card-title"><span class="dot"></span>Weather</div></div>
+      <div id="weatherBody"><div class="empty" style="color:#fff;opacity:.9">날씨를 불러오는 중...</div></div>
+    </section>
+
+    <!-- CALENDAR -->
+    <section class="card col-span-3">
+      <div class="card-head">
+        <div class="card-title"><span class="dot"></span>Calendar</div>
+        <div class="cal-nav">
+          <button class="cal-today-btn" onclick="goToday()">오늘</button>
+          <button onclick="moveMonth(-1)" title="이전 달">‹</button>
+          <span class="cal-title" id="calTitle"></span>
+          <button onclick="moveMonth(1)" title="다음 달">›</button>
+        </div>
+      </div>
+      <div class="cal-grid" id="calGrid"></div>
+      <div class="cal-legend">
+        <span><span class="cal-dot" style="background:var(--purple)"></span>할 일</span>
+        <span>😊 행복</span><span>🙂 보통</span><span>😪 피곤</span><span>🤔 반성</span><span>✨ 설렘</span>
+        <span style="margin-left:auto">날짜를 누르면 그날 할 일·기록을 볼 수 있어요</span>
+      </div>
+    </section>
+
+    <!-- DAILY -->
+    <section class="card col-span-2">
+      <div class="card-head">
+        <div class="card-title"><span class="dot"></span>Daily<span class="count-badge" id="dailyCount">0</span></div>
+        <button class="mini-btn" onclick="openDailyModal()" title="기록 추가">+</button>
+      </div>
+      <div class="filter-bar" id="dailyFilters"></div>
+      <ul class="daily-list" id="dailyList"></ul>
+    </section>
+
+    <!-- MEMO -->
+    <section class="card">
+      <div class="card-head">
+        <div class="card-title"><span class="dot"></span>Memo<span class="count-badge" id="memoCount">0</span></div>
+        <button class="mini-btn" onclick="openMemoModal()" title="메모 추가">+</button>
+      </div>
+      <input class="memo-search" id="memoSearch" placeholder="🔍 메모 검색..." oninput="renderMemos()" />
+      <div class="memo-list" id="memoList"></div>
+    </section>
+
+    <!-- VISION BOARD -->
+    <section class="card col-span-2">
+      <div class="card-head">
+        <div class="card-title"><span class="dot"></span>Vision Board</div>
+      </div>
+      <div class="vision-grid" id="visionGrid"></div>
+      <input type="file" id="visionFile" accept="image/*" style="display:none" onchange="handleVisionUpload(event)" />
+    </section>
+  </div>
+
+  <div class="footer">DAY BLOOM · 데이터는 이 브라우저에만 저장돼요 (LocalStorage)</div>
+</div>
+
+<!-- ===== Modals ===== -->
+<div class="overlay" id="overlay">
+  <!-- Goal modal -->
+  <div class="modal" id="goalModal" style="display:none">
+    <h2 id="goalModalTitle">목표 추가</h2>
+    <input type="hidden" id="goalId" />
+    <div class="field"><label>목표명</label><input id="goalTitle" placeholder="예) 자격증 공부 꾸준히 하기" /></div>
+    <div class="field-row">
+      <div class="field"><label>기간</label>
+        <select id="goalPeriod" onchange="toggleGoalCustomPeriod()"><option>올해</option><option>이번 달</option><option>이번 주</option><option>직접 설정</option></select>
+      </div>
+      <div class="field"><label>중요도</label>
+        <select id="goalPriority"><option>높음</option><option selected>보통</option><option>낮음</option></select>
+      </div>
+    </div>
+    <div class="field-row" id="goalCustomPeriod" style="display:none">
+      <div class="field"><label>시작일</label><input type="date" id="goalStart" /></div>
+      <div class="field"><label>종료일</label><input type="date" id="goalEnd" /></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModals()">취소</button>
+      <button class="btn btn-primary" onclick="saveGoal()">저장</button>
+    </div>
+  </div>
+
+  <!-- Daily modal -->
+  <div class="modal" id="dailyModal" style="display:none">
+    <h2 id="dailyModalTitle">오늘 기록 추가</h2>
+    <input type="hidden" id="dailyIdField" />
+    <div class="field-row">
+      <div class="field" style="flex:2"><label>제목</label><input id="dTitle" placeholder="오늘의 기록 제목" /></div>
+      <div class="field"><label>날짜</label><input type="date" id="dDate" /></div>
+    </div>
+    <div class="field"><label>오늘의 감정</label>
+      <div class="mood-picker" id="moodPicker"></div>
+    </div>
+    <div class="field"><label>카테고리</label>
+      <select id="dCategory"><option>업무</option><option>공부</option><option>건강</option><option>돈관리</option><option>개인</option></select>
+    </div>
+    <div class="field"><label>오늘 한 일 / 내용</label><textarea id="dContent" placeholder="오늘 있었던 일, 배운 점, 느낀 점을 적어요"></textarea></div>
+    <div class="field"><label>내일 할 일</label><textarea id="dTomorrow" placeholder="내일 해야 할 일"></textarea></div>
+    <div class="field" style="display:flex;align-items:center;gap:8px">
+      <input type="checkbox" id="dCompleted" style="width:auto" /><label style="margin:0">정리 완료</label>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="dDeleteBtn" onclick="deleteDailyFromModal()" style="display:none;margin-right:auto">삭제</button>
+      <button class="btn btn-ghost" onclick="closeModals()">취소</button>
+      <button class="btn btn-primary" onclick="saveDaily()">저장</button>
+    </div>
+  </div>
+
+  <!-- Memo modal -->
+  <div class="modal" id="memoModal" style="display:none">
+    <h2 id="memoModalTitle">메모 추가</h2>
+    <input type="hidden" id="memoId" />
+    <div class="field"><label>메모 내용</label><textarea id="memoContent" placeholder="아이디어, 해야 할 일, 사고 싶은 것..."></textarea></div>
+    <div class="field"><label>상태</label>
+      <select id="memoStatus"><option>임시</option><option>보관</option><option>완료</option></select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModals()">취소</button>
+      <button class="btn btn-primary" onclick="saveMemo()">저장</button>
+    </div>
+  </div>
+
+  <!-- Vision caption modal -->
+  <div class="modal" id="visionModal" style="display:none">
+    <h2>이미지 설명</h2>
+    <input type="hidden" id="visionId" />
+    <div class="field"><label>설명</label><input id="visionDesc" placeholder="예) 경제적 자유, 여행, 자격증 합격..." /></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModals()">취소</button>
+      <button class="btn btn-primary" onclick="saveVisionDesc()">저장</button>
+    </div>
+  </div>
+
+  <!-- Todo modal -->
+  <div class="modal" id="todoModal" style="display:none">
+    <h2 id="todoModalTitle">할 일 추가</h2>
+    <input type="hidden" id="todoId" />
+    <div class="field"><label>할 일</label><input id="todoTitle" placeholder="예) 자격증 강의 3강 듣기" /></div>
+    <div class="field"><label>날짜</label><input type="date" id="todoDate" /></div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="todoDeleteBtn" onclick="deleteTodoFromModal()" style="display:none;margin-right:auto">삭제</button>
+      <button class="btn btn-ghost" onclick="closeModals()">취소</button>
+      <button class="btn btn-primary" onclick="saveTodo()">저장</button>
+    </div>
+  </div>
+
+  <!-- Day detail modal -->
+  <div class="modal" id="dayModal" style="display:none">
+    <h2 id="dayModalTitle">날짜</h2>
+    <div id="dayBody"></div>
+    <div class="day-add">
+      <input id="dayQuickTodo" placeholder="이 날 할 일 빠르게 추가..." onkeydown="if(event.key==='Enter')addDayTodo()" />
+      <button class="btn btn-primary" onclick="addDayTodo()">추가</button>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="openDailyModal('',dayModalDate)">이 날 기록 쓰기</button>
+      <button class="btn btn-ghost" onclick="closeModals()">닫기</button>
+    </div>
+  </div>
+
+  <!-- Settings modal -->
+  <div class="modal" id="settingsModal" style="display:none">
+    <h2>설정</h2>
+    <div class="field"><label>테마 색상</label>
+      <div class="swatches" id="swatches"></div>
+    </div>
+    <div class="field"><label>글씨 크기</label>
+      <select id="fontSizeSel" onchange="applyFontSize(this.value)">
+        <option value="15">작게</option><option value="16" selected>보통</option><option value="18">크게</option><option value="20">아주 크게</option>
+      </select>
+    </div>
+    <div class="field"><label>날씨</label>
+      <div style="font-size:.8rem;color:var(--text-soft)">위치 기반 실시간 날씨가 자동으로 표시돼요. 별도 설정이 필요 없습니다.</div>
+    </div>
+    <div class="field"><label>데이터 관리</label>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn btn-ghost" onclick="exportData()">내보내기 (백업)</button>
+        <button class="btn btn-ghost" onclick="document.getElementById('importFile').click()">가져오기</button>
+        <input type="file" id="importFile" accept="application/json" style="display:none" onchange="importData(event)" />
+      </div>
+      <div id="backupStatus" style="font-size:.74rem;color:var(--text-soft);margin-top:8px"></div>
+      <div style="font-size:.72rem;color:var(--text-soft);margin-top:4px">데이터는 이 브라우저에만 저장돼요. 가끔 내보내기로 백업해 두면 안전합니다.</div>
+    </div>
+    <div class="field"><label>도움말</label>
+      <button class="btn btn-ghost" onclick="startOnboarding()">처음 안내 다시 보기</button>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="saveSettings()">완료</button>
+    </div>
+  </div>
+
+  <!-- Confirm modal (네이티브 confirm 대체) -->
+  <div class="modal" id="confirmModal" style="display:none;max-width:400px">
+    <h2 id="confirmTitle">확인</h2>
+    <p id="confirmMsg" style="color:var(--text-soft);font-size:.95rem;margin-bottom:6px"></p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeConfirm(false)">취소</button>
+      <button class="btn btn-ghost" id="confirmAltBtn" style="display:none" onclick="closeConfirm('alt')">합치기</button>
+      <button class="btn btn-primary" id="confirmOkBtn" onclick="closeConfirm(true)">확인</button>
+    </div>
+  </div>
+
+  <!-- Onboarding modal (첫 방문 환영) -->
+  <div class="modal" id="onboardModal" style="display:none;max-width:460px">
+    <div class="ob-hero">
+      <div class="ob-mark">
+        <svg width="34" height="34" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="6.2" r="3.8" fill="#fff"/><circle cx="17.52" cy="10.21" r="3.8" fill="#fff"/>
+          <circle cx="15.41" cy="16.69" r="3.8" fill="#fff"/><circle cx="8.59" cy="16.69" r="3.8" fill="#fff"/>
+          <circle cx="6.48" cy="10.21" r="3.8" fill="#fff"/><circle cx="12" cy="12" r="3.0" fill="#7C5CFC"/>
+        </svg>
+      </div>
+      <h2 style="margin-bottom:4px">DAY BLOOM에 오신 걸 환영해요 🌸</h2>
+      <p style="color:var(--text-soft);font-size:.9rem">나만의 하루를 피워내는 공간이에요. 핵심만 짧게 알려드릴게요.</p>
+    </div>
+    <ul class="ob-tips">
+      <li><span class="ob-ico">⚡</span><span><b>빠른 추가</b><span>상단 Quick Add로 기록·메모·할 일을 바로 추가해요.</span></span></li>
+      <li><span class="ob-ico">📅</span><span><b>캘린더</b><span>날짜를 누르면 그날의 할 일과 기록을 보고 더할 수 있어요.</span></span></li>
+      <li><span class="ob-ico">🎯</span><span><b>목표 &amp; 비전보드</b><span>올해 목표와 꿈 이미지를 한곳에 모아 동기부여 받아요.</span></span></li>
+      <li><span class="ob-ico">💾</span><span><b>백업</b><span>데이터는 이 브라우저에만 저장돼요. 설정에서 가끔 내보내기 하세요.</span></span></li>
+    </ul>
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="closeOnboarding()">시작하기</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============ 저장소 유틸 ============ */
+const KEY='smileDiary_v1';
+const DEFAULT_STATE={
+  goals:[], dailies:[], memos:[], visions:[], todos:[],
+  settings:{theme:'#7C5CFC', accent:'#B388FF', soft:'#EDE7FF', fontSize:'16', lastBackup:'', onboarded:false}
+};
+let state=load();
+
+function load(){
+  try{
+    const raw=localStorage.getItem(KEY);
+    if(!raw) return seed();
+    const s=JSON.parse(raw);
+    return Object.assign({}, JSON.parse(JSON.stringify(DEFAULT_STATE)), s,
+      {settings:Object.assign({}, DEFAULT_STATE.settings, s.settings||{})});
+  }catch(e){ return seed(); }
+}
+// 저장: 성공 시 true. 용량 초과 등 실패 시 경고 후 false (앱이 멈추지 않도록)
+function save(){
+  try{ localStorage.setItem(KEY, JSON.stringify(state)); return true; }
+  catch(e){
+    toast('⚠ 저장 공간이 가득 찼어요. 설정에서 백업 후 비전보드 이미지를 줄여 주세요.');
+    return false;
+  }
+}
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+function now(){ return new Date().toISOString(); }
+function todayStr(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+
+/* 첫 방문 샘플 데이터 (PRD 예시 기반) */
+function seed(){
+  const s=JSON.parse(JSON.stringify(DEFAULT_STATE));
+  s.goals=[
+    {id:uid(),title:'2026 업무 정리 시스템 만들기',period:'올해',status:'진행 중',priority:'높음',createdAt:now()},
+    {id:uid(),title:'자격증 공부 꾸준히 하기',period:'올해',status:'진행 중',priority:'보통',createdAt:now()},
+    {id:uid(),title:'건강 루틴 지키기',period:'이번 달',status:'진행 중',priority:'보통',createdAt:now()},
+    {id:uid(),title:'경제적 자유를 위한 돈 관리하기',period:'올해',status:'진행 중',priority:'높음',createdAt:now()}
+  ];
+  s.memos=[
+    {id:uid(),content:'아침 루틴 정리해서 비전보드에 올리기',status:'임시',isPinned:true,createdAt:now()}
+  ];
+  s.todos=[
+    {id:uid(),title:'자격증 강의 듣기',date:todayStr(),done:false,createdAt:now()},
+    {id:uid(),title:'건강 루틴 - 스트레칭',date:todayStr(),done:false,createdAt:now()}
+  ];
+  return s;
+}
+
+/* ============ 날짜 / 문구 ============ */
+const QUOTES=[
+  '오늘 하루도 한 걸음, 충분히 잘하고 있어요.',
+  '완벽하지 않아도 괜찮아요. 시작이 중요해요.',
+  '시작이 반, 나머지 반은 오늘의 용기예요.',
+  '완벽한 때는 오지 않아요. 지금이 그때예요.',
+  '가장 작은 한 걸음이 가장 큰 변화를 만듭니다.',
+  '두려움은 시작을 미루는 핑계일 뿐이에요.',
+  '망설이는 순간에도 시간은 흐르고 있어요.',
+  '오늘 시작하면 내일은 익숙해집니다.',
+  '첫 줄을 쓰는 용기가 한 권의 책을 만들어요.',
+  '준비가 끝나길 기다리면 영영 시작 못 해요.',
+  '작게 시작해서 길게 이어가요.',
+  '불안할 땐 할 수 있는 가장 작은 일부터.',
+  '한 걸음을 내딛는 순간 길이 보이기 시작해요.',
+  '오늘의 결심은 내일의 습관이 됩니다.',
+  '시작은 언제나 어설프지만 그래서 소중해요.',
+  '미루지 않은 오늘이 가장 빠른 지름길이에요.',
+  '용기는 두렵지 않은 게 아니라 그래도 하는 거예요.',
+  '지금 떠오른 생각, 지금 적어 두세요.',
+  '오늘 할 수 있는 일을 내일로 미루지 말아요.',
+  '작은 시도가 쌓여 큰 자신감이 됩니다.',
+  '천천히 가도 멈추지만 않으면 돼요.',
+  '꾸준함은 재능을 이깁니다.',
+  '기분이 아니라 시스템이 나를 데려가 줍니다.',
+  '오늘 심은 작은 습관이 내일의 나를 만듭니다.',
+  '매일 5분이 1년 뒤엔 30시간이 됩니다.',
+  '하루를 거르더라도 다음 날 다시 이어가면 돼요.',
+  '습관은 의지보다 힘이 셉니다.',
+  '반복은 지루하지만 결국 실력이 됩니다.',
+  '느려도 방향만 맞으면 결국 도착해요.',
+  '오늘의 루틴이 미래의 안정이 됩니다.',
+  '작은 일을 매일 하는 사람이 멀리 갑니다.',
+  '꾸준한 사람에게는 운도 자주 찾아와요.',
+  '하루의 성실함이 한 달의 결과를 바꿉니다.',
+  '멈추지 않는 한, 늦은 건 없어요.',
+  '매일 같은 시간에 하는 일이 나를 지켜줍니다.',
+  '오늘도 한 칸, 내일도 한 칸 채워가요.',
+  '습관이 자리 잡으면 노력은 가벼워져요.',
+  '작심삼일도 백 번이면 삼백 일이에요.',
+  '꾸준함 앞에서는 게으름도 물러섭니다.',
+  '매일의 작은 약속을 나와 지켜가요.',
+  '작은 기록이 모여 큰 성장이 됩니다.',
+  '미래의 나에게 보내는 선물, 오늘의 기록.',
+  '기록하는 사람은 길을 잃지 않아요.',
+  '한 페이지씩, 그렇게 인생이 쓰여요.',
+  '쌓인 기록이 어느 날 큰 자신감이 됩니다.',
+  '오늘의 작은 정리가 내일의 여유가 됩니다.',
+  '적어두면 잊어도 괜찮아요.',
+  '흩어진 생각도 적으면 길이 됩니다.',
+  '기록은 어제의 나와 나누는 대화예요.',
+  '정리된 책상이 정리된 마음을 만들어요.',
+  '오늘 남긴 한 줄이 훗날의 지도가 됩니다.',
+  '기억은 흐려져도 기록은 남습니다.',
+  '하루를 돌아보는 사람은 분명히 자라고 있어요.',
+  '메모 한 줄이 아이디어를 살립니다.',
+  '정리는 버리는 일이 아니라 고르는 일이에요.',
+  '기록은 성실함의 가장 다정한 증거예요.',
+  '오늘의 감정도 기록할 가치가 있어요.',
+  '작은 정리가 큰 결정을 쉽게 만들어요.',
+  '매일의 기록이 나만의 역사가 됩니다.',
+  '적는 순간, 막연함은 계획이 됩니다.',
+  '어제보다 나은 오늘, 그걸로 충분해요.',
+  '실수는 배움의 다른 이름이에요.',
+  '비교 대상은 어제의 나 하나면 충분해요.',
+  '모르는 걸 인정하는 것도 실력이에요.',
+  '성장은 편안함 밖에서 일어납니다.',
+  '오늘 배운 하나가 내일의 무기가 됩니다.',
+  '넘어진 자리에서 배우면 그게 전진이에요.',
+  '질문이 많은 사람이 멀리 갑니다.',
+  '한 뼘씩 자라는 게 가장 단단한 성장이에요.',
+  '어려운 일일수록 나를 키워줍니다.',
+  '오늘의 서툶이 내일의 능숙함이 됩니다.',
+  '배움에는 늦은 나이가 없어요.',
+  '실패는 끝이 아니라 데이터를 모으는 일이에요.',
+  '성장은 직선이 아니라 계단처럼 옵니다.',
+  '피드백은 나를 더 멀리 데려가는 선물이에요.',
+  '같은 실수를 줄이는 것도 큰 발전이에요.',
+  '오늘의 한계가 내일의 출발선이 됩니다.',
+  '배운 걸 써먹어야 진짜 내 것이 돼요.',
+  '불편함을 견딘 만큼 단단해집니다.',
+  '어제의 나를 이긴 오늘이 진짜 승리예요.',
+  '오늘의 나에게 친절하게 대해 주세요.',
+  '나를 믿는 마음이 가장 큰 자산이에요.',
+  '내 속도대로 가도 괜찮아요.',
+  '오늘 하루, 나를 칭찬할 일 하나는 꼭 있어요.',
+  '지금 이 순간도 충분히 의미 있어요.',
+  '나에게 가장 다정한 사람은 나여야 해요.',
+  '부족한 점보다 해낸 일을 먼저 봐주세요.',
+  '애쓴 나를 토닥여 주는 것도 일이에요.',
+  '완벽하지 않은 나도 충분히 괜찮아요.',
+  '남의 속도에 내 마음을 맞추지 말아요.',
+  '오늘 못 한 건 내일의 나에게 부드럽게 넘겨요.',
+  '나를 다그치기보다 응원해 주세요.',
+  '실수한 나를 너무 오래 미워하지 말아요.',
+  '나의 가치는 성과로만 정해지지 않아요.',
+  '지친 날엔 멈추는 것도 용기예요.',
+  '있는 그대로의 나도 사랑받을 자격이 있어요.',
+  '비교는 나를 작게 만드는 가장 빠른 길이에요.',
+  '오늘의 나에게 수고했다고 말해 주세요.',
+  '나를 향한 말투부터 다정하게 바꿔봐요.',
+  '가끔은 나에게 쉬어도 된다고 허락해요.',
+  '잘 쉬는 것도 성장의 일부랍니다.',
+  '멈춤은 후퇴가 아니라 숨 고르기예요.',
+  '지친 몸엔 휴식이 가장 좋은 보약이에요.',
+  '쉬어야 더 멀리 갈 수 있어요.',
+  '오늘은 아무것도 안 해도 괜찮은 날이에요.',
+  '잠깐 멈추면 더 또렷하게 보여요.',
+  '휴식은 게으름이 아니라 준비예요.',
+  '몸이 보내는 신호에 귀 기울여 주세요.',
+  '충분히 잔 하루가 좋은 결정을 만듭니다.',
+  '바쁠수록 잠깐의 여백이 필요해요.',
+  '쉼표가 있어야 문장이 완성돼요.',
+  '오늘의 휴식이 내일의 에너지가 됩니다.',
+  '무리한 어제보다 회복한 오늘이 나아요.',
+  '잘 멈출 줄 아는 사람이 오래갑니다.',
+  '마음이 무거운 날엔 천천히 호흡해 봐요.',
+  '쉬는 동안에도 나는 자라고 있어요.',
+  '바쁨을 자랑 삼지 말고 여유를 챙겨요.',
+  '하루쯤 느리게 가도 세상은 무너지지 않아요.',
+  '피곤할 땐 계획보다 잠이 먼저예요.',
+  '회복도 일정에 넣어야 하는 중요한 일이에요.',
+  '돈도 건강도, 결국 매일의 습관에서 나와요.',
+  '작은 절약이 모여 큰 자유가 됩니다.',
+  '버는 것만큼 지키는 것도 실력이에요.',
+  '오늘의 기록이 내일의 가계부를 살려요.',
+  '소비 전에 한 번 멈추면 후회가 줄어요.',
+  '경제적 자유는 절제의 다른 이름이에요.',
+  '돈에 끌려가지 말고 돈을 이끌어 가요.',
+  '작은 수입도 꾸준하면 큰 강이 됩니다.',
+  '가진 것에 만족할 줄 아는 게 부의 시작이에요.',
+  '투자보다 먼저 배워야 할 건 인내예요.',
+  '숫자를 마주 볼 용기가 자유를 앞당겨요.',
+  '필요와 욕심을 구분하는 게 절약의 핵심이에요.',
+  '오늘 아낀 한 푼이 미래의 선택지가 됩니다.',
+  '돈 관리는 미래의 나를 돌보는 일이에요.',
+  '수입의 일부는 늘 미래에게 먼저 주세요.',
+  '불필요한 지출을 줄이는 것도 버는 일이에요.',
+  '부는 속도가 아니라 방향과 꾸준함이에요.',
+  '기록하는 소비는 새는 돈을 막아줍니다.',
+  '작은 목돈이 든든한 안전망이 됩니다.',
+  '돈의 주인이 되는 첫걸음은 기록이에요.',
+  '건강은 미루면 가장 비싸게 청구됩니다.',
+  '오늘의 물 한 컵, 내일의 가벼움이에요.',
+  '잘 자는 하루가 가장 강력한 자기관리예요.',
+  '가벼운 스트레칭이 무거운 하루를 풀어줘요.',
+  '몸을 움직이면 마음도 따라 움직여요.',
+  '건강한 몸이 모든 꿈의 그릇이에요.',
+  '하루 10분 산책이 머리를 맑게 해줘요.',
+  '규칙적인 끼니가 마음도 안정시켜요.',
+  '몸은 정직해서 돌본 만큼 돌려줘요.',
+  '바른 자세가 하루의 피로를 덜어줍니다.',
+  '오늘의 작은 운동이 내일의 활력이 돼요.',
+  '숨을 깊게 쉬는 것도 훌륭한 휴식이에요.',
+  '건강은 결과가 아니라 매일의 선택이에요.',
+  '무리한 하루보다 꾸준한 가벼운 움직임이 나아요.',
+  '잘 먹고 잘 자면 절반은 해낸 거예요.',
+  '몸을 아끼는 만큼 하루가 길어집니다.',
+  '피로가 쌓이기 전에 미리 쉬어 주세요.',
+  '건강한 습관은 미래의 나에게 주는 선물이에요.',
+  '가벼운 땀 한 방울이 기분을 바꿔줘요.',
+  '오늘 챙긴 건강이 평생의 자산이 됩니다.',
+  '오늘은 두 번 오지 않는 하루예요.',
+  '지금 이 시간이 가장 젊은 순간이에요.',
+  '미룬 일은 사라지지 않고 쌓일 뿐이에요.',
+  '하루를 어떻게 시작하느냐가 하루를 정해요.',
+  '시간은 쓰는 대로 인생이 됩니다.',
+  '바쁜 게 아니라 우선순위의 문제예요.',
+  '오늘에 집중하면 내일은 가벼워져요.',
+  '잃어버린 시간은 후회로만 돌아와요.',
+  '중요한 일을 먼저 하면 하루가 단단해져요.',
+  '5분의 여유가 하루를 다르게 만들어요.',
+  '오늘 하루를 잘 보내는 게 인생을 잘 사는 거예요.',
+  '시간을 관리하면 결국 나를 관리하는 거예요.',
+  '아침의 한 시간이 저녁의 두 시간보다 값져요.',
+  '내일의 나를 위해 오늘의 나가 준비해요.',
+  '흘려보낸 오늘은 가장 비싼 낭비예요.',
+  '지금 할 수 있는 일에만 마음을 쏟아요.',
+  '하루의 끝에 오늘을 돌아보는 습관을 가져요.',
+  '시간을 아끼는 사람은 인생을 아끼는 거예요.',
+  '오늘의 한 시간이 미래의 하루를 바꿉니다.',
+  '늦었다고 느낄 때가 가장 빠른 때예요.',
+  '멀리 보되, 오늘 한 걸음만 내딛어요.',
+  '계획보다 중요한 건 오늘의 한 줄 실천이에요.',
+  '큰 목표는 작은 조각으로 나누면 가벼워져요.',
+  '목표가 분명하면 길은 저절로 보여요.',
+  '적어둔 목표는 잊히지 않아요.',
+  '방향을 정하면 속도는 따라옵니다.',
+  '오늘의 작은 목표 하나면 충분해요.',
+  '이루고 싶다면 먼저 적고 자주 보세요.',
+  '목표는 부담이 아니라 나침반이에요.',
+  '한 번에 다 하려 말고 한 가지씩 해요.',
+  '꿈을 날짜와 함께 적으면 계획이 됩니다.',
+  '오늘 끝낸 작은 일이 큰 목표의 벽돌이에요.',
+  '목표를 잘게 쪼개면 매일 성취감을 얻어요.',
+  '멈춰 선 목표보다 천천히 가는 목표가 나아요.',
+  '눈에 보이는 목표가 마음을 움직여요.',
+  '계획은 완벽하지 않아도 실행이 채워줍니다.',
+  '오늘의 체크 하나가 목표를 가깝게 만들어요.',
+  '비전을 그리면 하루가 의미로 채워져요.',
+  '목표는 크게, 행동은 작게.',
+  '한 해의 목표도 결국 오늘에서 시작돼요.',
+  '불안할 땐 가장 작은 일부터 손에 잡아요.',
+  '감정은 손님처럼 왔다가 지나갑니다.',
+  '마음이 흐릴 땐 글로 적어 내려놓아요.',
+  '오늘의 기분을 인정하면 한결 가벼워져요.',
+  '걱정의 대부분은 일어나지 않아요.',
+  '힘든 마음도 흘러가도록 두면 돼요.',
+  '화가 날 땐 한 번 더 깊게 숨 쉬어요.',
+  '감정에 이름을 붙이면 다루기 쉬워져요.',
+  '오늘의 작은 기쁨을 놓치지 말아요.',
+  '마음의 날씨도 매일 달라지는 게 자연스러워요.',
+  '슬픔도 충분히 느껴야 지나갑니다.',
+  '마음을 다독이는 말 한마디를 나에게 건네요.',
+  '불안을 적어두면 크기가 작아져요.',
+  '기분이 가라앉는 날엔 햇빛을 쬐어 봐요.',
+  '감정을 억누르기보다 흘려보내요.',
+  '오늘 느낀 감정도 소중한 나의 일부예요.',
+  '마음이 시키는 쉼을 거절하지 말아요.',
+  '평온은 비우는 데서 시작돼요.',
+  '내 마음을 가장 잘 아는 사람은 나예요.',
+  '감사할 일을 떠올리면 마음이 환해져요.',
+  '좋은 말 한마디가 누군가의 하루를 살려요.',
+  '고맙다는 말은 아낄수록 손해예요.',
+  '먼저 건네는 인사가 관계를 따뜻하게 해요.',
+  '경청은 가장 다정한 선물이에요.',
+  '비교 대신 응원을 건네면 모두가 자라요.',
+  '진심은 화려한 말보다 오래 남아요.',
+  '함께 가면 멀리 갈 수 있어요.',
+  '작은 친절이 큰 인연을 만들어요.',
+  '미안함도 솔직히 전하면 가벼워져요.',
+  '곁에 있어 주는 것만으로 힘이 됩니다.',
+  '받은 친절은 다른 곳으로 흘려보내요.',
+  '좋은 관계도 꾸준한 관심으로 자라요.',
+  '칭찬은 돌고 돌아 나에게 돌아와요.',
+  '이해받고 싶다면 먼저 이해해 봐요.',
+  '오늘 누군가에게 작은 응원을 건네 보세요.',
+  '진심 어린 한마디가 벽을 허물어요.',
+  '고마운 사람에게 오늘 마음을 표현해요.',
+  '함께 웃는 순간이 인생의 보석이에요.',
+  '베푼 마음은 어떤 형태로든 돌아옵니다.',
+  '좋은 사람 곁에 있으면 나도 좋아져요.',
+  '오늘도 분명 좋은 일이 숨어 있어요.',
+  '생각의 방향이 하루의 색을 정해요.',
+  '웃는 연습도 하면 실력이 늡니다.',
+  '문제 속에는 늘 기회가 함께 있어요.',
+  '긍정은 현실을 바꾸는 가장 작은 힘이에요.',
+  '안 되는 이유보다 되는 방법을 찾아봐요.',
+  '감사는 가진 것을 두 배로 보이게 해요.',
+  '오늘의 작은 행운에 고마워해 봐요.',
+  '흐린 날에도 구름 위엔 해가 있어요.',
+  '기대는 하되 결과엔 너그러워져요.',
+  '좋은 하루는 좋은 마음에서 시작돼요.',
+  '불평 대신 한 가지 감사를 떠올려요.',
+  '태도가 능력의 부족을 메워줍니다.',
+  '오늘의 미소가 누군가에겐 위로예요.',
+  '긍정의 말은 나부터 듣게 됩니다.',
+  '같은 일도 보는 눈에 따라 달라져요.',
+  '넘어져도 웃을 수 있다면 이미 강한 거예요.',
+  '희망은 가장 부지런한 사람의 편이에요.',
+  '오늘을 선물처럼 대해 보세요.',
+  '마음먹기에 따라 오늘은 명작이 됩니다.',
+  '넘어지는 건 실패가 아니라 과정이에요.',
+  '포기하지 않는 한 아직 지지 않은 거예요.',
+  '바닥을 쳤다면 이제 올라갈 일만 남았어요.',
+  '버티는 힘도 훌륭한 재능이에요.',
+  '오늘의 인내가 내일의 자유를 만듭니다.',
+  '폭풍은 지나가고 나는 더 단단해져요.',
+  '다시 일어서는 횟수가 곧 성공이에요.',
+  '힘든 만큼 이야기는 깊어집니다.',
+  '끝까지 가본 사람만 아는 풍경이 있어요.',
+  '흔들려도 뿌리가 깊으면 쓰러지지 않아요.',
+  '오늘 견딘 하루가 나를 증명해요.',
+  '포기하고 싶을 때가 결승선에 가까운 때예요.',
+  '실패를 견딘 사람이 더 멀리 갑니다.',
+  '비온 뒤 땅이 더 단단해지는 법이에요.',
+  '버텨낸 시간은 절대 배신하지 않아요.',
+  '한계라 느낄 때 한 걸음만 더 가봐요.',
+  '끈기는 결국 재능을 추월합니다.',
+  '무너진 자리에서 다시 쌓으면 더 튼튼해요.',
+  '오늘의 작은 견딤이 큰 결과를 부릅니다.',
+  '멈추지 않으면 결국 닿게 됩니다.',
+  '한 번에 하나씩 하면 결국 다 됩니다.',
+  '집중은 무엇을 안 할지 고르는 일이에요.',
+  '단순하게 만들수록 멀리 갈 수 있어요.',
+  '산만함을 줄이면 시간이 늘어나요.',
+  '가장 중요한 한 가지에 오늘을 걸어요.',
+  '덜어내면 진짜 중요한 게 보여요.',
+  '몰입한 한 시간이 흩어진 하루를 이겨요.',
+  '할 일을 줄이면 마음이 가벼워져요.',
+  '방해 요소를 치우면 능률이 올라가요.',
+  '단순한 계획이 끝까지 갑니다.',
+  '오늘은 딱 한 가지만 제대로 해봐요.',
+  '여러 개를 쥐려다 다 놓치기 쉬워요.',
+  '집중은 짧고 굵게, 휴식은 확실하게.',
+  '비우는 용기가 채우는 힘을 만들어요.',
+  '핵심에만 집중하면 속도가 붙어요.',
+  '오늘의 우선순위 하나를 분명히 해요.',
+  '산만한 마음엔 한 줄의 목표가 약이에요.',
+  '작게 좁히면 깊게 갈 수 있어요.',
+  '하나를 끝내고 다음으로 넘어가요.',
+  '단순함은 가장 세련된 전략이에요.',
+  '오늘의 나는 어제보다 한 뼘 컸어요.',
+  '스스로를 믿는 만큼 멀리 갈 수 있어요.',
+  '나는 내 인생의 가장 든든한 편이에요.',
+  '오늘 해낸 일을 작게 여기지 말아요.',
+  '나의 노력은 조용히 쌓이고 있어요.',
+  '내가 나를 인정하면 세상도 따라와요.',
+  '오늘도 나를 위해 한 가지를 해냈어요.',
+  '작은 성취도 충분히 축하받을 일이에요.',
+  '나는 매일 조금씩 더 나아지고 있어요.',
+  '오늘 하루도 잘 살아낸 내가 대견해요.',
+  '나의 가능성은 아직 다 펼쳐지지 않았어요.',
+  '스스로에게 박수를 보내는 하루가 되길 바라요.',
+  '오늘의 한 걸음에 자부심을 가져도 돼요.',
+  '나를 응원하는 마음이 오늘을 빛나게 해요.',
+  '내가 쌓은 오늘이 나를 증명할 거예요.',
+  '잘하고 있다는 말, 나에게 자주 해줘요.',
+  '오늘도 충분히 멋진 하루를 보냈어요.',
+  '나의 속도와 색깔, 그대로가 정답이에요.',
+  '내일의 나는 오늘의 나를 고마워할 거예요.',
+  '지금의 나로도 충분히 자랑스러워요.',
+  '오늘 흘린 땀은 내일의 미소가 됩니다.',
+  '포기하지 않은 오늘의 나를 안아주세요.',
+  '작은 정성이 오늘을 특별하게 만들어요.',
+  '하루의 끝에서 나를 칭찬하며 잠들어요.',
+  '오늘도 나답게, 그거면 충분해요.',
+  '내가 걷는 이 길이 결국 나의 이야기예요.',
+  '오늘 떠오른 작은 아이디어를 흘려보내지 말아요.',
+  '한 줄의 다짐이 하루의 방향을 잡아줍니다.',
+  '꾸준한 기록은 미래의 나에게 보내는 편지예요.',
+  '오늘의 정리가 어지러운 마음을 가라앉혀요.',
+  '바쁠수록 잠깐 멈춰 우선순위를 적어봐요.',
+  '느긋한 아침이 단단한 하루를 만들어요.',
+  '오늘 아낀 작은 시간이 여유로 돌아옵니다.',
+  '미루던 일 하나를 끝내면 마음이 가벼워져요.',
+  '작은 성공의 경험이 더 큰 도전을 부릅니다.',
+  '오늘의 친절은 돌고 돌아 나를 따뜻하게 해요.',
+  '숫자보다 꾸준함이 통장을 키웁니다.',
+  '오늘 마신 물 한 잔도 나를 돌보는 일이에요.',
+  '걸음 수가 늘면 생각도 맑아집니다.',
+  '하루를 마무리하는 한 줄이 내일을 정리해줘요.',
+  '감사 한 줄로 하루를 닫아 보세요.',
+  '오늘의 실수에서 내일의 지혜를 건져요.',
+  '멈추고 싶을 때 이유를 다시 떠올려봐요.',
+  '작은 약속을 지키는 내가 점점 멋져져요.',
+  '오늘의 한 걸음이 모여 길이 됩니다.',
+  '비교를 멈추면 비로소 내가 보여요.',
+  '마음이 무거운 날엔 할 일을 하나로 줄여요.',
+  '오늘의 나에게 가장 다정한 말을 건네요.',
+  '규칙적인 하루가 가장 든든한 안전망이에요.',
+  '작은 저축이 미래의 선택지를 넓혀줍니다.',
+  '오늘의 몰입이 흩어진 하루를 구합니다.',
+  '잘 쉰 하루는 내일의 집중력을 선물해요.',
+  '한 번 더 시도하는 용기가 결과를 바꿔요.',
+  '오늘 적은 목표가 내일의 나를 이끌어줘요.',
+  '마음의 짐도 적어두면 가벼워집니다.',
+  '작은 진전도 분명한 전진이에요.',
+  '오늘 가꾼 습관이 평생의 자산이 됩니다.',
+  '흐린 마음엔 산책 한 바퀴가 약이에요.',
+  '오늘 해낸 일을 스스로 인정해 주세요.',
+  '꾸준히 걷는 사람에게 길은 친절해집니다.',
+  '오늘의 작은 절제가 내일의 자유를 키워요.',
+  '잠들기 전 오늘의 잘한 일 하나를 떠올려요.',
+  '멀어 보여도 매일 가면 닿는 거리예요.',
+  '오늘의 기록이 훗날 가장 큰 응원이 됩니다.',
+  '마음을 다해 보낸 하루는 후회가 없어요.',
+  '오늘도 나는 나의 속도로 자라고 있어요.',
+];
+function dayOfYear(d){ const s=new Date(d.getFullYear(),0,0); return Math.floor((d-s)/86400000); }
+function renderHeader(){
+  const d=new Date();
+  const days=['일','월','화','수','목','금','토'];
+  document.getElementById('todayDate').textContent=
+    `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} ${days[d.getDay()]}요일`;
+  setTodayQuote();
+}
+// 날짜 기준으로 매일 다른 명언 (하루 동안 고정)
+function setTodayQuote(){
+  const idx=dayOfYear(new Date())%QUOTES.length;
+  document.getElementById('dailyQuote').textContent='"'+QUOTES[idx]+'"';
+}
+// 클릭 시 그날 명언이 아닌 다른 명언을 랜덤으로 보여줌
+function rotateQuote(){
+  const cur=document.getElementById('dailyQuote').textContent.replace(/^"|"$/g,'');
+  let q=cur;
+  if(QUOTES.length>1){ while(q===cur){ q=QUOTES[Math.floor(Math.random()*QUOTES.length)]; } }
+  document.getElementById('dailyQuote').textContent='"'+q+'"';
+}
+
+/* ============ GOAL ============ */
+function renderGoals(){
+  const ul=document.getElementById('goalList');
+  document.getElementById('goalCount').textContent=state.goals.length;
+  if(!state.goals.length){ ul.innerHTML='<li class="empty">아직 목표가 없어요. + 를 눌러 추가해 보세요!</li>'; return; }
+  ul.innerHTML=state.goals.map(g=>`
+    <li class="goal-item ${g.status==='완료'?'done':''}">
+      <div class="goal-check ${g.status==='완료'?'done':''}" role="button" tabindex="0" aria-label="${g.status==='완료'?'완료 취소':'완료 표시'}: ${esc(g.title)}" onclick="toggleGoal('${g.id}')">${g.status==='완료'?'✓':''}</div>
+      <div class="goal-body">
+        <div class="name">${esc(g.title)}</div>
+        <div class="goal-meta">
+          <span class="tag">${esc(goalPeriodLabel(g))}</span>
+          <span class="tag pri-${g.priority}">중요도 ${g.priority}</span>
+        </div>
+      </div>
+      <div class="row-actions">
+        <button class="icon-btn" aria-label="목표 수정" onclick="openGoalModal('${g.id}')">✏</button>
+        <button class="icon-btn" aria-label="위로 이동" onclick="moveGoal('${g.id}',-1)">↑</button>
+        <button class="icon-btn" aria-label="아래로 이동" onclick="moveGoal('${g.id}',1)">↓</button>
+        <button class="icon-btn" aria-label="목표 삭제" onclick="deleteGoal('${g.id}')">🗑</button>
+      </div>
+    </li>`).join('');
+}
+// 기간 표시 라벨: '직접 설정'이면 날짜 범위로, 그 외엔 그대로
+function goalPeriodLabel(g){
+  if(g.period==='직접 설정' && g.periodStart && g.periodEnd) return dotDate(g.periodStart)+' ~ '+dotDate(g.periodEnd);
+  return g.period;
+}
+function dotDate(s){ return (s||'').replace(/-/g,'.'); }
+// 기간 select가 '직접 설정'일 때만 날짜 입력 표시
+function toggleGoalCustomPeriod(){
+  const custom=document.getElementById('goalPeriod').value==='직접 설정';
+  document.getElementById('goalCustomPeriod').style.display=custom?'flex':'none';
+  if(custom && !document.getElementById('goalStart').value){
+    document.getElementById('goalStart').value=todayStr();
+  }
+}
+function openGoalModal(id){
+  showModal('goalModal');
+  document.getElementById('goalModalTitle').textContent=id?'목표 수정':'목표 추가';
+  if(id){
+    const g=state.goals.find(x=>x.id===id);
+    document.getElementById('goalId').value=g.id;
+    document.getElementById('goalTitle').value=g.title;
+    document.getElementById('goalPeriod').value=g.period;
+    document.getElementById('goalPriority').value=g.priority;
+    document.getElementById('goalStart').value=g.periodStart||'';
+    document.getElementById('goalEnd').value=g.periodEnd||'';
+  }else{
+    document.getElementById('goalId').value='';
+    document.getElementById('goalTitle').value='';
+    document.getElementById('goalPeriod').value='올해';
+    document.getElementById('goalPriority').value='보통';
+    document.getElementById('goalStart').value='';
+    document.getElementById('goalEnd').value='';
+  }
+  toggleGoalCustomPeriod();
+}
+function saveGoal(){
+  const title=document.getElementById('goalTitle').value.trim();
+  if(!title){ toast('목표명을 입력해 주세요'); return; }
+  const period=document.getElementById('goalPeriod').value;
+  let periodStart='', periodEnd='';
+  if(period==='직접 설정'){
+    periodStart=document.getElementById('goalStart').value;
+    periodEnd=document.getElementById('goalEnd').value;
+    if(!periodStart || !periodEnd){ toast('시작일과 종료일을 모두 선택해 주세요'); return; }
+    if(periodStart>periodEnd){ toast('종료일이 시작일보다 빠를 수 없어요'); return; }
+  }
+  const id=document.getElementById('goalId').value;
+  const data={title,period,periodStart,periodEnd,priority:document.getElementById('goalPriority').value};
+  if(id){ Object.assign(state.goals.find(x=>x.id===id),data); }
+  else{ state.goals.push(Object.assign({id:uid(),status:'진행 중',createdAt:now()},data)); }
+  save(); renderGoals(); closeModals(); toast('저장됐어요 🎯');
+}
+function toggleGoal(id){ const g=state.goals.find(x=>x.id===id); g.status=g.status==='완료'?'진행 중':'완료'; save(); renderGoals(); }
+function deleteGoal(id){
+  const i=state.goals.findIndex(x=>x.id===id); if(i<0) return;
+  const removed=state.goals[i];
+  state.goals.splice(i,1); save(); renderGoals();
+  toastUndo('목표를 삭제했어요', ()=>{ state.goals.splice(i,0,removed); save(); renderGoals(); });
+}
+function moveGoal(id,dir){
+  const i=state.goals.findIndex(x=>x.id===id), j=i+dir;
+  if(j<0||j>=state.goals.length) return;
+  [state.goals[i],state.goals[j]]=[state.goals[j],state.goals[i]]; save(); renderGoals();
+}
+
+/* ============ DAILY ============ */
+const MOODS=[['행복','😊'],['보통','🙂'],['피곤','😪'],['반성','🤔'],['설렘','✨']];
+let selectedMood='보통';
+let dailyFilter={type:'all',value:''};
+function renderMoodPicker(){
+  document.getElementById('moodPicker').innerHTML=MOODS.map(([m,e])=>
+    `<div class="mood-opt ${m===selectedMood?'active':''}" role="button" tabindex="0" aria-pressed="${m===selectedMood}" aria-label="감정: ${m}" onclick="pickMood('${m}')">${e} ${m}</div>`).join('');
+}
+function pickMood(m){ selectedMood=m; renderMoodPicker(); }
+function moodEmoji(m){ const f=MOODS.find(x=>x[0]===m); return f?f[1]:'🙂'; }
+
+function renderDailyFilters(){
+  const filters=[['all','전체'],['today','오늘'],['month','이번 달']];
+  const cats=['업무','공부','건강','돈관리','개인'];
+  let html=filters.map(([t,l])=>`<button class="chip ${dailyFilter.type===t?'active':''}" onclick="setDailyFilter('${t}','')">${l}</button>`).join('');
+  html+=cats.map(c=>`<button class="chip ${dailyFilter.type==='cat'&&dailyFilter.value===c?'active':''}" onclick="setDailyFilter('cat','${c}')">${c}</button>`).join('');
+  document.getElementById('dailyFilters').innerHTML=html;
+}
+function setDailyFilter(t,v){ dailyFilter={type:t,value:v}; renderDailyFilters(); renderDailies(); }
+function renderDailies(){
+  document.getElementById('dailyCount').textContent=state.dailies.length;
+  let list=[...state.dailies].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const t=todayStr(), ym=t.slice(0,7);
+  if(dailyFilter.type==='today') list=list.filter(d=>d.date===t);
+  else if(dailyFilter.type==='month') list=list.filter(d=>(d.date||'').slice(0,7)===ym);
+  else if(dailyFilter.type==='cat') list=list.filter(d=>d.category===dailyFilter.value);
+  const ul=document.getElementById('dailyList');
+  if(!list.length){ ul.innerHTML='<li class="empty">기록이 없어요. 오늘 하루를 남겨 보세요 📝</li>'; return; }
+  ul.innerHTML=list.map(d=>`
+    <li class="daily-item" role="button" tabindex="0" aria-label="기록 열기: ${esc(d.title||'제목 없음')}" onclick="openDailyModal('${d.id}')">
+      <div class="daily-top">
+        <span class="title">${esc(d.title||'(제목 없음)')}</span>
+        <span class="date">${d.date||''}</span>
+      </div>
+      <div class="daily-tags">
+        <span class="mood">${moodEmoji(d.mood)} ${d.mood}</span>
+        <span class="tag">${d.category}</span>
+        ${d.isCompleted?'<span class="tag pri-낮음">완료</span>':''}
+      </div>
+      ${d.content?`<div class="daily-content">${esc(d.content)}</div>`:''}
+    </li>`).join('');
+}
+function openDailyModal(id, presetDate){
+  showModal('dailyModal');
+  renderMoodPicker();
+  const del=document.getElementById('dDeleteBtn');
+  if(id){
+    const d=state.dailies.find(x=>x.id===id);
+    document.getElementById('dailyModalTitle').textContent='기록 수정';
+    document.getElementById('dailyIdField').value=d.id;
+    document.getElementById('dTitle').value=d.title||'';
+    document.getElementById('dDate').value=d.date||todayStr();
+    selectedMood=d.mood||'보통'; renderMoodPicker();
+    document.getElementById('dCategory').value=d.category||'업무';
+    document.getElementById('dContent').value=d.content||'';
+    document.getElementById('dTomorrow').value=d.tomorrowTask||'';
+    document.getElementById('dCompleted').checked=!!d.isCompleted;
+    del.style.display='inline-block'; del.dataset.id=d.id;
+  }else{
+    document.getElementById('dailyModalTitle').textContent='오늘 기록 추가';
+    document.getElementById('dailyIdField').value='';
+    document.getElementById('dTitle').value='';
+    document.getElementById('dDate').value=presetDate||todayStr();
+    selectedMood='보통'; renderMoodPicker();
+    document.getElementById('dCategory').value='업무';
+    document.getElementById('dContent').value='';
+    document.getElementById('dTomorrow').value='';
+    document.getElementById('dCompleted').checked=false;
+    del.style.display='none';
+  }
+}
+function saveDaily(){
+  const title=document.getElementById('dTitle').value.trim();
+  const content=document.getElementById('dContent').value.trim();
+  if(!title && !content){ toast('제목이나 내용을 입력해 주세요'); return; }
+  const id=document.getElementById('dailyIdField').value;
+  const data={
+    title, date:document.getElementById('dDate').value||todayStr(), mood:selectedMood,
+    category:document.getElementById('dCategory').value, content,
+    tomorrowTask:document.getElementById('dTomorrow').value.trim(),
+    isCompleted:document.getElementById('dCompleted').checked, updatedAt:now()
+  };
+  if(id){ Object.assign(state.dailies.find(x=>x.id===id),data); }
+  else{ state.dailies.push(Object.assign({id:uid(),createdAt:now()},data)); }
+  save(); renderDailies(); renderCalendar(); closeModals(); toast('기록 저장 완료 📝');
+}
+function deleteDailyFromModal(){
+  const id=document.getElementById('dDeleteBtn').dataset.id;
+  const i=state.dailies.findIndex(x=>x.id===id); if(i<0) return;
+  const removed=state.dailies[i];
+  state.dailies.splice(i,1); save(); renderDailies(); renderCalendar(); closeModals();
+  toastUndo('기록을 삭제했어요', ()=>{ state.dailies.splice(i,0,removed); save(); renderDailies(); renderCalendar(); });
+}
+
+/* ============ MEMO ============ */
+function renderMemos(){
+  document.getElementById('memoCount').textContent=state.memos.length;
+  const q=(document.getElementById('memoSearch').value||'').toLowerCase();
+  let list=[...state.memos].sort((a,b)=>(b.isPinned?1:0)-(a.isPinned?1:0) || (b.createdAt||'').localeCompare(a.createdAt||''));
+  if(q) list=list.filter(m=>(m.content||'').toLowerCase().includes(q));
+  const box=document.getElementById('memoList');
+  if(!list.length){ box.innerHTML='<div class="empty">메모가 없어요 💡</div>'; return; }
+  box.innerHTML=list.map(m=>`
+    <div class="memo-card ${m.isPinned?'pinned':''} status-${m.status}">
+      <div class="memo-top">
+        <div class="memo-text">${esc(m.content)}</div>
+        <div class="row-actions">
+          <button class="icon-btn" aria-label="${m.isPinned?'고정 해제':'고정'}" onclick="togglePin('${m.id}')">${m.isPinned?'📌':'📍'}</button>
+          <button class="icon-btn" aria-label="메모 수정" onclick="openMemoModal('${m.id}')">✏</button>
+          <button class="icon-btn" aria-label="메모 삭제" onclick="deleteMemo('${m.id}')">🗑</button>
+        </div>
+      </div>
+      <div class="memo-meta">
+        <select class="status-sel" onchange="setMemoStatus('${m.id}',this.value)">
+          ${['임시','보관','완료'].map(s=>`<option ${m.status===s?'selected':''}>${s}</option>`).join('')}
+        </select>
+      </div>
+    </div>`).join('');
+}
+function openMemoModal(id){
+  showModal('memoModal');
+  if(id){
+    const m=state.memos.find(x=>x.id===id);
+    document.getElementById('memoModalTitle').textContent='메모 수정';
+    document.getElementById('memoId').value=m.id;
+    document.getElementById('memoContent').value=m.content;
+    document.getElementById('memoStatus').value=m.status;
+  }else{
+    document.getElementById('memoModalTitle').textContent='메모 추가';
+    document.getElementById('memoId').value='';
+    document.getElementById('memoContent').value='';
+    document.getElementById('memoStatus').value='임시';
+  }
+}
+function saveMemo(){
+  const content=document.getElementById('memoContent').value.trim();
+  if(!content){ toast('메모 내용을 입력해 주세요'); return; }
+  const id=document.getElementById('memoId').value;
+  const status=document.getElementById('memoStatus').value;
+  if(id){ const m=state.memos.find(x=>x.id===id); m.content=content; m.status=status; }
+  else{ state.memos.push({id:uid(),content,status,isPinned:false,createdAt:now()}); }
+  save(); renderMemos(); closeModals(); toast('메모 저장 💡');
+}
+function togglePin(id){ const m=state.memos.find(x=>x.id===id); m.isPinned=!m.isPinned; save(); renderMemos(); }
+function setMemoStatus(id,v){ const m=state.memos.find(x=>x.id===id); m.status=v; save(); renderMemos(); }
+function deleteMemo(id){
+  const i=state.memos.findIndex(x=>x.id===id); if(i<0) return;
+  const removed=state.memos[i];
+  state.memos.splice(i,1); save(); renderMemos();
+  toastUndo('메모를 삭제했어요', ()=>{ state.memos.splice(i,0,removed); save(); renderMemos(); });
+}
+
+/* ============ VISION BOARD ============ */
+function renderVisions(){
+  const grid=document.getElementById('visionGrid');
+  let html=state.visions.map(v=>`
+    <div class="vision-cell ${v.isMain?'main':''}">
+      <img src="${v.imageUrl}" alt="${esc(v.description||'')}" />
+      ${v.description?`<div class="vision-cap">${esc(v.description)}</div>`:''}
+      <div class="vision-tools">
+        <button aria-label="설명 입력" onclick="openVisionDesc('${v.id}')" title="설명">✏</button>
+        <button aria-label="대표 이미지로 설정" onclick="setMainVision('${v.id}')" title="대표 설정">⭐</button>
+        <button aria-label="이미지 삭제" onclick="deleteVision('${v.id}')" title="삭제">🗑</button>
+      </div>
+    </div>`).join('');
+  html+=`<div class="vision-add" role="button" tabindex="0" aria-label="이미지 추가" onclick="document.getElementById('visionFile').click()">
+      <div><div class="plus">+</div>이미지 추가</div></div>`;
+  grid.innerHTML=html;
+}
+// 업로드 이미지를 캔버스로 리사이즈·압축 → 저장 용량 대폭 절약
+function compressImage(file, maxDim, quality){
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onload=e=>{
+      const img=new Image();
+      img.onload=()=>{
+        let w=img.width, h=img.height;
+        if(w>maxDim || h>maxDim){ const r=Math.min(maxDim/w, maxDim/h); w=Math.round(w*r); h=Math.round(h*r); }
+        const cv=document.createElement('canvas'); cv.width=w; cv.height=h;
+        cv.getContext('2d').drawImage(img,0,0,w,h);
+        resolve(cv.toDataURL('image/jpeg', quality));
+      };
+      img.onerror=reject; img.src=e.target.result;
+    };
+    reader.onerror=reject; reader.readAsDataURL(file);
+  });
+}
+// 원본 그대로 data URL로 읽기 (GIF 애니메이션 보존용)
+function readAsDataURL(file){
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onload=e=>resolve(e.target.result);
+    reader.onerror=reject; reader.readAsDataURL(file);
+  });
+}
+async function handleVisionUpload(e){
+  const file=e.target.files[0]; e.target.value=''; if(!file) return;
+  if(!file.type.startsWith('image/')){ toast('이미지 파일만 추가할 수 있어요'); return; }
+  let dataUrl, isGif=file.type==='image/gif';
+  try{
+    if(isGif){
+      // GIF는 압축(캔버스)하면 애니메이션이 사라지므로 원본 유지 — 용량만 체크
+      if(file.size>2*1024*1024){ toast('GIF가 너무 커요 (2MB 이하 권장)'); return; }
+      dataUrl=await readAsDataURL(file);
+    }else{
+      dataUrl=await compressImage(file, 1000, 0.8);
+    }
+  }catch(err){ toast('이미지를 처리하지 못했어요'); return; }
+  const v={id:uid(),imageUrl:dataUrl,description:'',linkedGoalId:'',isMain:state.visions.length===0,createdAt:now()};
+  state.visions.push(v);
+  if(save()){ renderVisions(); toast(isGif?'GIF를 추가했어요 ✨':'비전보드에 추가됐어요 ✨ (자동 압축)'); }
+  else{ state.visions.pop(); renderVisions(); }  // 저장 실패 시 추가 취소
+}
+function openVisionDesc(id){
+  const v=state.visions.find(x=>x.id===id);
+  showModal('visionModal');
+  document.getElementById('visionId').value=id;
+  document.getElementById('visionDesc').value=v.description||'';
+}
+function saveVisionDesc(){
+  const id=document.getElementById('visionId').value;
+  state.visions.find(x=>x.id===id).description=document.getElementById('visionDesc').value.trim();
+  save(); renderVisions(); closeModals();
+}
+function setMainVision(id){ state.visions.forEach(v=>v.isMain=v.id===id); save(); renderVisions(); toast('대표 이미지로 설정했어요 ⭐'); }
+function deleteVision(id){
+  const i=state.visions.findIndex(x=>x.id===id); if(i<0) return;
+  const removed=state.visions[i];
+  state.visions.splice(i,1); save(); renderVisions();
+  toastUndo('이미지를 삭제했어요', ()=>{ state.visions.splice(i,0,removed); save(); renderVisions(); });
+}
+
+/* ============ WEATHER (Open-Meteo, 키 불필요) ============ */
+// 자동 새로고침 추적용: 마지막으로 날씨를 가져온 '시(hour)'와 시각(ms)
+let weatherLastHour=null, weatherLastFetch=0;
+// API 키 없이 실시간 날씨 (Open-Meteo + IP 위치, 모두 무료·키 불필요)
+function renderWeather(){
+  const body=document.getElementById('weatherBody');
+  body.innerHTML='<div class="empty" style="color:#fff;opacity:.9">실시간 날씨를 불러오는 중...</div>';
+  getLocation().then(loc=>fetchWeather(loc.lat,loc.lon,loc.name));
+}
+// 접속 시 팝업 없이 위치 결정:
+//  - 위치 권한이 '이미 허용'된 경우에만 정밀 위치 사용 (팝업 안 뜸)
+//  - 그 외(미정·거부)에는 팝업을 띄우지 않고 IP 기반 위치 사용
+function getLocation(){
+  return new Promise(resolve=>{
+    const ipFallback=()=>ipLocation().then(resolve);
+    const usePrecise=()=>navigator.geolocation.getCurrentPosition(
+      p=>resolve({lat:p.coords.latitude,lon:p.coords.longitude,name:''}),
+      ipFallback, {timeout:6000,maximumAge:600000}
+    );
+    if(!navigator.geolocation){ ipFallback(); return; }
+    if(navigator.permissions && navigator.permissions.query){
+      navigator.permissions.query({name:'geolocation'})
+        .then(p=>{ if(p.state==='granted') usePrecise(); else ipFallback(); })
+        .catch(ipFallback);
+    }else ipFallback();  // Permissions API 미지원 → 팝업 방지 위해 IP 사용
+  });
+}
+// 사용자가 직접 누를 때만 위치 권한을 요청 (한 번 허용하면 브라우저가 기억 → 이후 팝업 없음)
+function usePreciseLocation(){
+  if(!navigator.geolocation){ toast('이 브라우저는 위치를 지원하지 않아요'); return; }
+  document.getElementById('weatherBody').innerHTML='<div class="empty" style="color:#fff;opacity:.9">정확한 위치로 갱신 중...</div>';
+  navigator.geolocation.getCurrentPosition(
+    p=>{ fetchWeather(p.coords.latitude,p.coords.longitude,''); toast('정확한 위치로 갱신했어요 📍'); },
+    ()=>{ toast('위치 허용이 필요해요. 브라우저 주소창의 위치 아이콘에서 허용해 주세요'); renderWeather(); },
+    {timeout:8000}
+  );
+}
+async function ipLocation(){
+  try{
+    const r=await fetch('https://ipwho.is/');
+    const d=await r.json();
+    if(d&&d.success) return {lat:d.latitude,lon:d.longitude,name:d.city||d.region||''};
+  }catch(e){}
+  return {lat:37.5665,lon:126.9780,name:'서울'};  // 최후 기본값
+}
+async function fetchWeather(lat,lon,name){
+  try{
+    const wUrl=`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,weather_code,precipitation,is_day&hourly=precipitation_probability&timezone=auto&forecast_days=1`;
+    const aUrl=`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=pm2_5&timezone=auto`;
+    const [wRes,aRes]=await Promise.all([fetch(wUrl),fetch(aUrl)]);
+    if(!wRes.ok) throw new Error('weather '+wRes.status);
+    const w=await wRes.json();
+    const c=w.current;
+    // 강수확률: 현재 시각에 해당하는 hourly 값
+    let pop=null;
+    try{
+      const h=w.hourly, key=(c.time||'').slice(0,13);
+      const i=h.time.findIndex(t=>t.slice(0,13)===key);
+      if(i>=0) pop=h.precipitation_probability[i];
+    }catch(e){}
+    let pm25=null;
+    try{ if(aRes.ok){ const a=await aRes.json(); pm25=a.current&&a.current.pm2_5; } }catch(e){}
+    const code=c.weather_code, isDay=c.is_day!==0;
+    const at=new Date();
+    weatherLastHour=at.getHours(); weatherLastFetch=at.getTime();
+    const d={
+      icon:iconFor(code,isDay),
+      temp:Math.round(c.temperature_2m),
+      desc:codeDesc(code),
+      pop, humidity:Math.round(c.relative_humidity_2m),
+      pm25, name:name||'현재 위치',
+      tip:weatherTip(code,Math.round(c.temperature_2m)),
+      updated:`${String(at.getHours()).padStart(2,'0')}:${String(at.getMinutes()).padStart(2,'0')}`
+    };
+    paintWeather(d);
+    state.settings.lastWeather=Object.assign({},d,{ts:at.getTime()}); save();  // 오프라인 대비 캐시
+  }catch(err){
+    // 네트워크 실패 시: 마지막으로 본 날씨를 표시, 없으면 안내
+    const lw=state.settings.lastWeather;
+    if(lw) paintWeather(Object.assign({},lw,{stale:true}));
+    else showDemoWeather('날씨를 불러오지 못했어요. 네트워크 연결을 확인해 주세요.');
+  }
+}
+// WMO weather code → 아이콘
+function iconFor(code,isDay){
+  if(code===0) return isDay?'☀':'🌙';
+  if(code===1||code===2) return isDay?'🌤':'☁';
+  if(code===3) return '☁';
+  if(code===45||code===48) return '🌫';
+  if(code>=51&&code<=57) return '🌦';
+  if(code>=61&&code<=67) return '🌧';
+  if(code>=71&&code<=77) return '❄';
+  if(code>=80&&code<=82) return '🌦';
+  if(code>=85&&code<=86) return '❄';
+  if(code>=95) return '⛈';
+  return '🌤';
+}
+// WMO weather code → 한국어 설명
+function codeDesc(code){
+  const m={0:'맑음',1:'대체로 맑음',2:'구름 조금',3:'흐림',45:'안개',48:'짙은 안개',
+    51:'약한 이슬비',53:'이슬비',55:'강한 이슬비',56:'어는 이슬비',57:'강한 어는 이슬비',
+    61:'약한 비',63:'비',65:'강한 비',66:'어는 비',67:'강한 어는 비',
+    71:'약한 눈',73:'눈',75:'강한 눈',77:'싸락눈',
+    80:'약한 소나기',81:'소나기',82:'강한 소나기',85:'약한 눈 소나기',86:'눈 소나기',
+    95:'뇌우',96:'우박 동반 뇌우',99:'강한 우박 뇌우'};
+  return m[code]||'대체로 맑음';
+}
+function weatherTip(code,temp){
+  if(code>=95) return '천둥번개가 쳐요. 야외 활동은 피해요 ⛈';
+  if((code>=51&&code<=67)||(code>=80&&code<=82)) return '비가 올 수 있어요. 우산을 챙겨요 ☔';
+  if((code>=71&&code<=77)||code>=85) return '눈이 와요. 미끄럼 조심하세요 ❄';
+  if(code===45||code===48) return '안개가 꼈어요. 이동할 때 조심하세요 🌫';
+  if(temp<=4) return '날씨가 추워요. 따뜻하게 입어요 🧥';
+  if(temp>=28) return '더운 날이에요. 수분 보충 잊지 마세요 💧';
+  if(code===0||code===1) return '오늘은 산책하기 좋은 날이에요 🚶';
+  return '좋은 하루 보내세요 😊';
+}
+function pmLabel(pm){
+  if(pm==null) return '-';
+  if(pm<=15) return '좋음';
+  if(pm<=35) return '보통';
+  if(pm<=75) return '나쁨';
+  return '매우나쁨';
+}
+function paintWeather(d){
+  document.getElementById('weatherBody').innerHTML=`
+    <div class="w-main">
+      <div class="w-icon">${d.icon}</div>
+      <div><div class="w-temp">${d.temp}°</div><div class="w-desc">${esc(d.desc)} · ${esc(d.name||'')}</div></div>
+    </div>
+    <div class="w-stats">
+      <div>강수확률<b>${d.pop!=null?d.pop+'%':'-'}</b></div>
+      <div>습도<b>${d.humidity}%</b></div>
+      <div>미세먼지<b>${pmLabel(d.pm25)}</b></div>
+    </div>
+    <div class="w-tip">${d.tip}</div>
+    <div style="font-size:.72rem;opacity:.82;margin-top:8px;display:flex;justify-content:space-between;align-items:center">
+      <span>${d.stale?staleWeatherLabel(d):`🕒 ${d.updated} 기준 · 매시 자동 갱신`}</span>
+      <span style="display:flex;gap:10px">
+        <button class="w-link" style="margin:0" onclick="usePreciseLocation()">📍 정확한 위치</button>
+        <button class="w-link" style="margin:0" onclick="renderWeather()">새로고침</button>
+      </span>
+    </div>`;
+}
+// 경과 시간 텍스트
+function ageText(ts){
+  if(!ts) return '이전';
+  const m=Math.floor((Date.now()-ts)/60000);
+  if(m<1) return '방금';
+  if(m<60) return m+'분 전';
+  const h=Math.floor(m/60);
+  if(h<24) return h+'시간 전';
+  return Math.floor(h/24)+'일 전';
+}
+// 오프라인(캐시) 날씨 라벨 — 6시간 넘으면 '오래된 정보' 강조
+function staleWeatherLabel(d){
+  const old=d.ts && (Date.now()-d.ts)>=6*3600*1000;
+  return `📡 오프라인 · ${ageText(d.ts)} 날씨${old?' (오래된 정보)':''}`;
+}
+function showDemoWeather(note){
+  document.getElementById('weatherBody').innerHTML=`
+    <div class="w-main">
+      <div class="w-icon">🌤</div>
+      <div><div class="w-temp">--°</div><div class="w-desc">날씨 정보 없음</div></div>
+    </div>
+    <div class="w-tip" style="margin-top:6px">${esc(note)}</div>
+    <button class="w-link" onclick="renderWeather()">다시 시도</button>`;
+}
+// 매시간 자동 새로고침: 1분마다 '정시'가 바뀌었는지 확인 (슬립/절전 후에도 자동 복구)
+function startWeatherAutoRefresh(){
+  setInterval(()=>{
+    if(new Date().getHours()!==weatherLastHour) renderWeather();
+  }, 60*1000);
+  // 탭을 다시 볼 때, 마지막 갱신이 10분 이상 지났으면 새로고침
+  document.addEventListener('visibilitychange',()=>{
+    if(!document.hidden && Date.now()-weatherLastFetch>10*60*1000) renderWeather();
+  });
+  // 인터넷이 다시 연결되면 자동으로 최신 날씨로 갱신
+  window.addEventListener('online', renderWeather);
+}
+// 헤더 오프라인 표식 (온라인이면 숨김)
+function updateOnlineStatus(){
+  const chip=document.getElementById('offlineChip');
+  if(chip) chip.style.display=navigator.onLine?'none':'inline-block';
+}
+window.addEventListener('online', updateOnlineStatus);
+window.addEventListener('offline', updateOnlineStatus);
+
+/* ============ SETTINGS ============ */
+// 첫 방문 온보딩 — '시작하기' 누르면 다시 안 뜨도록 플래그 저장
+function closeOnboarding(){ state.settings.onboarded=true; save(); closeModals(); }
+function startOnboarding(){ showModal('onboardModal'); }
+const THEMES=[['#7C5CFC','#B388FF','#EDE7FF'],['#E0457B','#FF8FB1','#FFE2EC'],['#3FA971','#84D2A6','#E9F6EE'],['#2D7CF0','#7FB2FF','#E3EEFF'],['#F08A24','#FFC07A','#FFEFD9']];
+function renderSwatches(){
+  document.getElementById('swatches').innerHTML=THEMES.map(t=>
+    `<div class="swatch ${state.settings.theme===t[0]?'active':''}" style="background:${t[0]}" onclick="pickTheme('${t[0]}','${t[1]}','${t[2]}')"></div>`).join('');
+}
+function pickTheme(main,accent,soft){ state.settings.theme=main; state.settings.accent=accent; state.settings.soft=soft; applyTheme(); renderSwatches(); }
+function applyTheme(){
+  const r=document.documentElement.style;
+  r.setProperty('--purple',state.settings.theme);
+  r.setProperty('--purple-accent',state.settings.accent);
+  r.setProperty('--purple-soft',state.settings.soft);
+  setFavicon();  // 탭 아이콘·상태바 색을 테마에 맞춰 갱신
+}
+// 현재 테마 색으로 파비콘(SVG)과 모바일 theme-color를 다시 생성
+function setFavicon(){
+  const c1=state.settings.theme, c2=state.settings.accent;
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${c1}"/><stop offset="1" stop-color="${c2}"/></linearGradient></defs><rect width="48" height="48" rx="12" fill="url(#g)"/><g fill="#ffffff"><circle cx="24" cy="12.4" r="7.6"/><circle cx="35.04" cy="20.42" r="7.6"/><circle cx="30.82" cy="33.38" r="7.6"/><circle cx="17.18" cy="33.38" r="7.6"/><circle cx="12.96" cy="20.42" r="7.6"/></g><circle cx="24" cy="24" r="6.0" fill="${c1}"/></svg>`;
+  const link=document.getElementById('favicon');
+  if(link) link.href='data:image/svg+xml,'+encodeURIComponent(svg);
+  const meta=document.getElementById('themeColorMeta');
+  if(meta) meta.setAttribute('content',c1);
+}
+function applyFontSize(px){ document.documentElement.style.setProperty('--fs',px+'px'); state.settings.fontSize=px; }
+function openSettings(){
+  showModal('settingsModal');
+  renderSwatches();
+  document.getElementById('fontSizeSel').value=state.settings.fontSize;
+  updateBackupStatus();
+}
+function saveSettings(){
+  save(); closeModals(); toast('설정이 저장됐어요 ⚙');
+}
+function exportData(){
+  const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download='day-bloom-backup-'+todayStr()+'.json'; a.click();
+  state.settings.lastBackup=todayStr(); save();
+  updateBackupStatus();
+  toast('백업 파일을 내려받았어요 💾');
+}
+// 마지막 백업 이후 경과일 (백업 이력 없으면 null)
+function daysSinceBackup(){
+  const lb=state.settings.lastBackup;
+  if(!lb) return null;
+  return Math.floor((new Date(todayStr())-new Date(lb))/86400000);
+}
+function updateBackupStatus(){
+  const el=document.getElementById('backupStatus'); if(!el) return;
+  const d=daysSinceBackup();
+  if(d===null){ el.textContent='아직 백업한 적이 없어요. 정기적으로 내보내기를 권장해요.'; el.style.color='#e0457b'; }
+  else if(d===0){ el.textContent='오늘 백업했어요. 안전합니다 ✅'; el.style.color='var(--text-soft)'; }
+  else{ el.textContent=`마지막 백업: ${d}일 전`; el.style.color=d>=7?'#e0457b':'var(--text-soft)'; }
+}
+// 접속 시 백업 유도: 기록이 있고 7일 넘게 백업 안 했으면 한 번 안내
+function backupNudge(){
+  const hasData=state.dailies.length||state.memos.length||state.goals.length||state.todos.length||state.visions.length;
+  if(!hasData) return;
+  const d=daysSinceBackup();
+  if(d===null || d>=7){
+    setTimeout(()=>toast('💾 데이터 백업한 지 오래됐어요. 설정 → 내보내기를 권장해요.'),1600);
+  }
+}
+function importData(e){
+  const file=e.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    let s;
+    // 1) JSON 파싱 검증
+    try{ s=JSON.parse(ev.target.result); }
+    catch(err){ toast('JSON 파일을 읽을 수 없어요'); return; }
+    // 2) 구조 검증: 객체여야 하고, 데이터 항목이 있으면 배열이어야 함
+    if(!s || typeof s!=='object' || Array.isArray(s)){ toast('올바른 백업 파일이 아니에요'); return; }
+    const arrays=['goals','dailies','memos','todos','visions'];
+    for(const k of arrays){
+      if(k in s && !Array.isArray(s[k])){ toast(`백업 파일이 손상됐어요 (${k} 형식 오류)`); return; }
+    }
+    // 3) 적용 방식 선택: 합치기(기존 유지+새 항목 추가) / 전체 교체
+    openConfirm(
+      "백업을 어떻게 적용할까요?\n‘합치기’는 기존 기록을 두고 새 항목만 더하고, ‘전체 교체’는 현재 데이터를 모두 대체해요.",
+      ()=>applyImport(s,'replace'), '전체 교체',
+      '합치기', ()=>applyImport(s,'merge')
+    );
+  };
+  reader.readAsText(file); e.target.value='';
+}
+const IMPORT_KEYS=['goals','dailies','memos','todos','visions'];
+function applyImport(s, mode){
+  if(mode==='merge'){
+    // id가 없는(새로운) 항목만 뒤에 추가 → 중복 방지
+    IMPORT_KEYS.forEach(k=>{
+      const inc=Array.isArray(s[k])?s[k]:[];
+      const have=new Set((state[k]||[]).map(x=>x&&x.id));
+      state[k]=(state[k]||[]).concat(inc.filter(x=>x && !have.has(x.id)));
+    });
+    // 합치기에서는 설정(테마·백업일 등)은 기존 것을 유지
+  }else{
+    const clean={}; IMPORT_KEYS.forEach(k=>clean[k]=Array.isArray(s[k])?s[k]:[]);
+    const safe=(s.settings && typeof s.settings==='object' && !Array.isArray(s.settings))?s.settings:{};
+    state=Object.assign(JSON.parse(JSON.stringify(DEFAULT_STATE)), clean, {settings:Object.assign({},DEFAULT_STATE.settings,safe)});
+  }
+  if(save()){ renderAll(); applyTheme(); applyFontSize(state.settings.fontSize); toast(mode==='merge'?'기존 데이터에 합쳤어요 ✅':'데이터를 불러왔어요 ✅'); }
+}
+
+/* ============ TODO (할 일) ============ */
+function openTodoModal(id, presetDate){
+  showModal('todoModal');
+  const del=document.getElementById('todoDeleteBtn');
+  if(id){
+    const t=state.todos.find(x=>x.id===id);
+    document.getElementById('todoModalTitle').textContent='할 일 수정';
+    document.getElementById('todoId').value=t.id;
+    document.getElementById('todoTitle').value=t.title;
+    document.getElementById('todoDate').value=t.date;
+    del.style.display='inline-block'; del.dataset.id=t.id;
+  }else{
+    document.getElementById('todoModalTitle').textContent='할 일 추가';
+    document.getElementById('todoId').value='';
+    document.getElementById('todoTitle').value='';
+    document.getElementById('todoDate').value=presetDate||todayStr();
+    del.style.display='none';
+  }
+}
+function saveTodo(){
+  const title=document.getElementById('todoTitle').value.trim();
+  if(!title){ toast('할 일을 입력해 주세요'); return; }
+  const id=document.getElementById('todoId').value;
+  const date=document.getElementById('todoDate').value||todayStr();
+  if(id){ const t=state.todos.find(x=>x.id===id); t.title=title; t.date=date; }
+  else{ state.todos.push({id:uid(),title,date,done:false,createdAt:now()}); }
+  save(); renderCalendar(); closeModals(); toast('할 일 저장 ✅');
+}
+function toggleTodo(id){ const t=state.todos.find(x=>x.id===id); t.done=!t.done; save(); renderCalendar(); if(document.getElementById('dayModal').style.display==='block') renderDayBody(); }
+function deleteTodo(id){
+  const i=state.todos.findIndex(x=>x.id===id); if(i<0) return;
+  const removed=state.todos[i];
+  state.todos.splice(i,1); save(); renderCalendar();
+  if(document.getElementById('dayModal').style.display==='block') renderDayBody();
+  toastUndo('할 일을 삭제했어요', ()=>{
+    state.todos.splice(i,0,removed); save(); renderCalendar();
+    if(document.getElementById('dayModal').style.display==='block') renderDayBody();
+  });
+}
+function deleteTodoFromModal(){
+  const id=document.getElementById('todoDeleteBtn').dataset.id;
+  closeModals(); deleteTodo(id);  // 삭제 후 토스트에서 실행취소 가능
+}
+
+/* ============ CALENDAR ============ */
+const MOOD_COLOR={'행복':'#7C5CFC','보통':'#9aa0b4','피곤':'#2d7cf0','반성':'#e0457b','설렘':'#f0a92a'};
+let calRef=new Date();
+let dayModalDate=todayStr();
+function fmt(y,m,d){ return y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0'); }
+function moveMonth(dir){ calRef.setMonth(calRef.getMonth()+dir); renderCalendar(); }
+function goToday(){ calRef=new Date(); renderCalendar(); }
+function renderCalendar(){
+  const y=calRef.getFullYear(), m=calRef.getMonth();
+  document.getElementById('calTitle').textContent=`${y}.${String(m+1).padStart(2,'0')}`;
+  const first=new Date(y,m,1).getDay();
+  const days=new Date(y,m+1,0).getDate();
+  const t=todayStr();
+  const dow=['일','월','화','수','목','금','토'];
+  let html=dow.map((d,i)=>`<div class="cal-dow ${i===0?'sun':''} ${i===6?'sat':''}">${d}</div>`).join('');
+  for(let i=0;i<first;i++) html+='<div class="cal-cell empty"></div>';
+  for(let d=1;d<=days;d++){
+    const ds=fmt(y,m,d);
+    const wd=new Date(y,m,d).getDay();
+    const todos=state.todos.filter(x=>x.date===ds);
+    const moods=state.dailies.filter(x=>x.date===ds).map(x=>x.mood);
+    const dots=[...new Set(moods)].map(mo=>`<span class="cal-dot" style="background:${MOOD_COLOR[mo]||'#9aa0b4'}" title="${mo}"></span>`).join('');
+    const shownTodos=todos.slice(0,2).map(tt=>`<div class="cal-todo ${tt.done?'done':''}">${esc(tt.title)}</div>`).join('');
+    const more=todos.length>2?`<div class="cal-more">+${todos.length-2}개 더</div>`:'';
+    html+=`<div class="cal-cell ${ds===t?'today':''}" role="button" tabindex="0" aria-label="${y}년 ${m+1}월 ${d}일${todos.length?', 할 일 '+todos.length+'개':''}" onclick="openDayModal('${ds}')">
+        <div class="cal-num ${wd===0?'sun':''} ${wd===6?'sat':''}">${d}</div>
+        ${shownTodos}${more}
+        ${dots?`<div class="cal-dots">${dots}</div>`:''}
+      </div>`;
+  }
+  document.getElementById('calGrid').innerHTML=html;
+}
+
+/* ============ DAY DETAIL ============ */
+function openDayModal(ds){
+  dayModalDate=ds;
+  showModal('dayModal');
+  const [y,m,d]=ds.split('-').map(Number);
+  const dow=['일','월','화','수','목','금','토'][new Date(y,m-1,d).getDay()];
+  document.getElementById('dayModalTitle').textContent=`${y}.${String(m).padStart(2,'0')}.${String(d).padStart(2,'0')} ${dow}요일`;
+  document.getElementById('dayQuickTodo').value='';
+  renderDayBody();
+}
+function renderDayBody(){
+  const ds=dayModalDate;
+  const todos=state.todos.filter(x=>x.date===ds);
+  const recs=state.dailies.filter(x=>x.date===ds);
+  let html='<div class="day-section-title">할 일</div>';
+  if(!todos.length) html+='<div class="empty" style="padding:8px 0">이 날 할 일이 없어요</div>';
+  else html+=todos.map(t=>`
+    <div class="todo-row ${t.done?'done':''}">
+      <div class="todo-check ${t.done?'done':''}" role="button" tabindex="0" aria-label="${t.done?'완료 취소':'완료 표시'}: ${esc(t.title)}" onclick="toggleTodo('${t.id}')">${t.done?'✓':''}</div>
+      <div class="t-text">${esc(t.title)}</div>
+      <button class="icon-btn" aria-label="할 일 수정" onclick="openTodoModal('${t.id}')">✏</button>
+      <button class="icon-btn" aria-label="할 일 삭제" onclick="deleteTodo('${t.id}')">🗑</button>
+    </div>`).join('');
+  html+='<div class="day-section-title">기록</div>';
+  if(!recs.length) html+='<div class="empty" style="padding:8px 0">이 날 기록이 없어요</div>';
+  else html+=recs.map(r=>`
+    <div class="day-record" role="button" tabindex="0" aria-label="기록 열기: ${esc(r.title||'제목 없음')}" onclick="openDailyModal('${r.id}')" style="cursor:pointer">
+      <b>${moodEmoji(r.mood)} ${esc(r.title||'(제목 없음)')}</b>
+      <span class="tag" style="margin-left:6px">${r.category}</span>
+      ${r.content?`<div style="color:var(--text-soft);margin-top:5px;font-size:.84rem">${esc(r.content)}</div>`:''}
+    </div>`).join('');
+  document.getElementById('dayBody').innerHTML=html;
+}
+function addDayTodo(){
+  const input=document.getElementById('dayQuickTodo');
+  const title=input.value.trim();
+  if(!title) return;
+  state.todos.push({id:uid(),title,date:dayModalDate,done:false,createdAt:now()});
+  save(); input.value=''; renderDayBody(); renderCalendar();
+}
+
+/* ============ 공통 ============ */
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+let openModalId=null;
+function showModal(id){
+  openModalId=id;
+  document.getElementById('overlay').classList.add('open');
+  ['goalModal','dailyModal','memoModal','visionModal','settingsModal','todoModal','dayModal','confirmModal','onboardModal'].forEach(m=>document.getElementById(m).style.display=(m===id)?'block':'none');
+  // 첫 입력/버튼에 포커스 (접근성)
+  setTimeout(()=>{ const f=document.getElementById(id).querySelector('input,select,textarea,button,[tabindex="0"]'); if(f) f.focus(); },30);
+}
+function closeModals(){ openModalId=null; document.getElementById('overlay').classList.remove('open'); }
+document.getElementById('overlay').addEventListener('click',e=>{ if(e.target.id==='overlay') closeModals(); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModals(); });
+// 모달 포커스 트랩: 열린 모달 안에서만 Tab 순환
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Tab' || !openModalId) return;
+  const modal=document.getElementById(openModalId);
+  const f=[...modal.querySelectorAll('input,select,textarea,button,[tabindex="0"]')].filter(el=>el.offsetParent!==null);
+  if(!f.length) return;
+  const first=f[0], last=f[f.length-1];
+  if(e.shiftKey && document.activeElement===first){ e.preventDefault(); last.focus(); }
+  else if(!e.shiftKey && document.activeElement===last){ e.preventDefault(); first.focus(); }
+});
+// 키보드(Enter/Space)로 role="button" 요소 활성화
+document.addEventListener('keydown',e=>{
+  const el=document.activeElement;
+  if((e.key==='Enter'||e.key===' ') && el && el.getAttribute && el.getAttribute('role')==='button'){
+    e.preventDefault(); el.click();
+  }
+});
+document.getElementById('dailyQuote').addEventListener('click',rotateQuote);
+let toastTimer;
+function toast(msg){
+  const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),2200);
+}
+// 액션 버튼이 달린 토스트 (persist=true면 자동으로 사라지지 않음)
+function toastAction(msg, label, cb, persist){
+  const t=document.getElementById('toast'); t.innerHTML='';
+  const span=document.createElement('span'); span.textContent=msg;
+  const btn=document.createElement('button'); btn.className='toast-undo'; btn.textContent=label;
+  btn.onclick=()=>{ clearTimeout(toastTimer); t.classList.remove('show'); cb(); };
+  t.appendChild(span); t.appendChild(btn); t.classList.add('show');
+  clearTimeout(toastTimer);
+  if(!persist) toastTimer=setTimeout(()=>t.classList.remove('show'),5000);
+}
+// 실행취소 버튼이 달린 토스트 (삭제 되돌리기, 5초 후 사라짐)
+function toastUndo(msg, onUndo){ toastAction(msg, '실행취소', onUndo, false); }
+// 커스텀 확인창 (네이티브 confirm 대체). altLabel/onAlt를 주면 중간 버튼이 생김
+let confirmCb=null, confirmAltCb=null;
+function openConfirm(msg, onYes, okLabel, altLabel, onAlt){
+  document.getElementById('confirmMsg').textContent=msg;
+  document.getElementById('confirmOkBtn').textContent=okLabel||'확인';
+  confirmCb=onYes; confirmAltCb=onAlt||null;
+  const altBtn=document.getElementById('confirmAltBtn');
+  if(altLabel && onAlt){ altBtn.textContent=altLabel; altBtn.style.display=''; }
+  else altBtn.style.display='none';
+  showModal('confirmModal');
+}
+function closeConfirm(kind){
+  const yes=confirmCb, alt=confirmAltCb; confirmCb=null; confirmAltCb=null;
+  closeModals();
+  if(kind===true && yes) yes();
+  else if(kind==='alt' && alt) alt();
+}
+function renderAll(){ renderGoals(); renderDailyFilters(); renderDailies(); renderMemos(); renderVisions(); renderCalendar(); }
+
+/* ============ 초기화 ============ */
+applyTheme();
+applyFontSize(state.settings.fontSize);
+renderHeader();
+renderAll();
+renderWeather();
+startWeatherAutoRefresh();
+updateOnlineStatus();
+// 첫 방문이면 환영 온보딩을, 아니면 백업 안내를 (둘이 겹치지 않게)
+if(!state.settings.onboarded){ setTimeout(()=>showModal('onboardModal'),500); }
+else { backupNudge(); }
+// PWA 서비스 워커 등록 (http/https에서만 — 로컬 file://에서는 동작 안 함)
+// 새 버전은 자동 적용하지 않고, 사용자가 안내에서 '새로고침'을 누를 때만 적용
+if('serviceWorker' in navigator && location.protocol.startsWith('http')){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('sw.js').then(reg=>{
+      if(reg.waiting && navigator.serviceWorker.controller) promptUpdate(reg.waiting); // 이미 대기 중인 새 버전
+      reg.addEventListener('updatefound',()=>{
+        const nw=reg.installing; if(!nw) return;
+        nw.addEventListener('statechange',()=>{
+          if(nw.state==='installed' && navigator.serviceWorker.controller) promptUpdate(nw);
+        });
+      });
+    }).catch(()=>{});
+    let reloaded=false;
+    navigator.serviceWorker.addEventListener('controllerchange',()=>{
+      if(reloaded) return; reloaded=true; location.reload();  // 새 SW 활성화 후 한 번 새로고침
+    });
+  });
+}
+function promptUpdate(worker){
+  toastAction('🌱 새 버전이 나왔어요', '새로고침', ()=>worker.postMessage({type:'SKIP_WAITING'}), true);
+}
+// 모달 접근성: dialog 역할 부여
+document.querySelectorAll('.modal').forEach(m=>{ m.setAttribute('role','dialog'); m.setAttribute('aria-modal','true'); });
+// 헤더 명언: 키보드로도 다른 명언 보기
+(function(){ const q=document.getElementById('dailyQuote'); q.setAttribute('role','button'); q.setAttribute('tabindex','0'); q.setAttribute('aria-label','다른 명언 보기'); })();
+</script>
+</body>
+</html>
