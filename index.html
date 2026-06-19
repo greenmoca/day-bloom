@@ -253,7 +253,16 @@
   .toast-undo{margin-left:12px;background:var(--purple-accent);color:#fff;border:none;border-radius:8px;padding:4px 11px;font-size:.8rem;cursor:pointer;font-weight:700}
   .toast-undo:hover{filter:brightness(1.08)}
   .offline-chip{display:inline-block;font-size:.7rem;font-weight:600;color:#9a93ab;background:#f0eef7;border:1px solid var(--line);border-radius:999px;padding:1px 9px;vertical-align:middle;margin-left:4px}
+  /* 월간 리포트 */
+  .report-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+  @media(max-width:900px){.report-grid{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:640px){.report-grid{grid-template-columns:repeat(2,1fr)}}
+  .report-tile{background:var(--bg-soft);border:1px solid var(--line);border-radius:14px;padding:14px 12px;text-align:center}
+  .report-tile .rt-val{font-size:1.5rem;font-weight:700;color:var(--purple);line-height:1.2}
+  .report-tile .rt-label{font-size:.76rem;color:var(--text-soft);margin-top:4px}
   /* 전체 검색 결과 */
+  .search-group-title{font-size:.78rem;font-weight:700;color:var(--purple);margin:12px 0 6px;letter-spacing:.5px}
+  .search-group-title:first-child{margin-top:0}
   .search-hit{display:flex;gap:11px;align-items:flex-start;padding:11px;border:1px solid var(--line);border-radius:12px;margin-bottom:8px;cursor:pointer;transition:.15s}
   .search-hit:hover{border-color:var(--purple-accent);background:var(--bg-soft)}
   .search-hit .sh-ico{font-size:1.2rem;width:28px;text-align:center;flex:none}
@@ -361,6 +370,15 @@
         <span>😊 행복</span><span>🙂 보통</span><span>😪 피곤</span><span>🤔 반성</span><span>✨ 설렘</span>
         <span style="margin-left:auto">날짜를 누르면 그날 할 일·기록을 볼 수 있어요</span>
       </div>
+    </section>
+
+    <!-- MONTHLY REPORT -->
+    <section class="card col-span-3">
+      <div class="card-head">
+        <div class="card-title"><span class="dot"></span>Monthly Report</div>
+        <span id="reportMonth" style="font-size:.82rem;color:var(--text-soft)"></span>
+      </div>
+      <div id="reportBody" class="report-grid"></div>
     </section>
 
     <!-- DAILY -->
@@ -1142,12 +1160,12 @@ function saveGoal(){
     if(periodStart>periodEnd){ toast('종료일이 시작일보다 빠를 수 없어요'); return; }
   }
   const id=document.getElementById('goalId').value;
-  const data={title,period,periodStart,periodEnd,priority:document.getElementById('goalPriority').value};
+  const data={title,period,periodStart,periodEnd,priority:document.getElementById('goalPriority').value,updatedAt:now()};
   if(id){ Object.assign(state.goals.find(x=>x.id===id),data); }
   else{ state.goals.push(Object.assign({id:uid(),status:'진행 중',createdAt:now()},data)); }
   save(); renderGoals(); closeModals(); toast('저장됐어요 🎯');
 }
-function toggleGoal(id){ const g=state.goals.find(x=>x.id===id); g.status=g.status==='완료'?'진행 중':'완료'; save(); renderGoals(); }
+function toggleGoal(id){ const g=state.goals.find(x=>x.id===id); g.status=g.status==='완료'?'진행 중':'완료'; g.updatedAt=now(); save(); renderGoals(); }
 function deleteGoal(id){
   const i=state.goals.findIndex(x=>x.id===id); if(i<0) return;
   const removed=state.goals[i];
@@ -1299,12 +1317,12 @@ function saveMemo(){
   if(!content){ toast('메모 내용을 입력해 주세요'); return; }
   const id=document.getElementById('memoId').value;
   const status=document.getElementById('memoStatus').value;
-  if(id){ const m=state.memos.find(x=>x.id===id); m.content=content; m.status=status; }
-  else{ state.memos.push({id:uid(),content,status,isPinned:false,createdAt:now()}); }
+  if(id){ const m=state.memos.find(x=>x.id===id); m.content=content; m.status=status; m.updatedAt=now(); }
+  else{ state.memos.push({id:uid(),content,status,isPinned:false,createdAt:now(),updatedAt:now()}); }
   save(); renderMemos(); closeModals(); toast('메모 저장 💡');
 }
-function togglePin(id){ const m=state.memos.find(x=>x.id===id); m.isPinned=!m.isPinned; save(); renderMemos(); }
-function setMemoStatus(id,v){ const m=state.memos.find(x=>x.id===id); m.status=v; save(); renderMemos(); }
+function togglePin(id){ const m=state.memos.find(x=>x.id===id); m.isPinned=!m.isPinned; m.updatedAt=now(); save(); renderMemos(); }
+function setMemoStatus(id,v){ const m=state.memos.find(x=>x.id===id); m.status=v; m.updatedAt=now(); save(); renderMemos(); }
 function deleteMemo(id){
   const i=state.memos.findIndex(x=>x.id===id); if(i<0) return;
   const removed=state.memos[i];
@@ -1407,10 +1425,10 @@ function openVisionDesc(id){
 }
 function saveVisionDesc(){
   const id=document.getElementById('visionId').value;
-  state.visions.find(x=>x.id===id).description=document.getElementById('visionDesc').value.trim();
+  const v=state.visions.find(x=>x.id===id); v.description=document.getElementById('visionDesc').value.trim(); v.updatedAt=now();
   save(); renderVisions(); closeModals();
 }
-function setMainVision(id){ state.visions.forEach(v=>v.isMain=v.id===id); save(); renderVisions(); toast('대표 이미지로 설정했어요 ⭐'); }
+function setMainVision(id){ state.visions.forEach(v=>{ const m=v.id===id; if(v.isMain!==m){ v.isMain=m; v.updatedAt=now(); } }); save(); renderVisions(); toast('대표 이미지로 설정했어요 ⭐'); }
 async function deleteVision(id){
   const i=state.visions.findIndex(x=>x.id===id); if(i<0) return;
   const removed=state.visions[i];
@@ -1745,11 +1763,11 @@ function saveTodo(){
   if(!title){ toast('할 일을 입력해 주세요'); return; }
   const id=document.getElementById('todoId').value;
   const date=document.getElementById('todoDate').value||todayStr();
-  if(id){ const t=state.todos.find(x=>x.id===id); t.title=title; t.date=date; }
-  else{ state.todos.push({id:uid(),title,date,done:false,createdAt:now()}); }
+  if(id){ const t=state.todos.find(x=>x.id===id); t.title=title; t.date=date; t.updatedAt=now(); }
+  else{ state.todos.push({id:uid(),title,date,done:false,createdAt:now(),updatedAt:now()}); }
   save(); renderCalendar(); closeModals(); toast('할 일 저장 ✅');
 }
-function toggleTodo(id){ const t=state.todos.find(x=>x.id===id); t.done=!t.done; save(); renderCalendar(); if(document.getElementById('dayModal').style.display==='block') renderDayBody(); }
+function toggleTodo(id){ const t=state.todos.find(x=>x.id===id); t.done=!t.done; t.updatedAt=now(); save(); renderCalendar(); if(document.getElementById('dayModal').style.display==='block') renderDayBody(); }
 function deleteTodo(id){
   const i=state.todos.findIndex(x=>x.id===id); if(i<0) return;
   const removed=state.todos[i];
@@ -1904,7 +1922,27 @@ function closeConfirm(kind){
   if(kind===true && yes) yes();
   else if(kind==='alt' && alt) alt();
 }
-function renderAll(){ renderGoals(); renderDailyFilters(); renderDailies(); renderMemos(); renderVisions(); renderCalendar(); }
+function renderAll(){ renderGoals(); renderDailyFilters(); renderDailies(); renderMemos(); renderVisions(); renderCalendar(); renderReport(); }
+/* ============ 월간 리포트 ============ */
+function renderReport(){
+  const el=document.getElementById('reportBody'); if(!el) return;
+  const ym=todayStr().slice(0,7);
+  const mLabel=document.getElementById('reportMonth'); if(mLabel) mLabel.textContent=ym.replace('-','. ')+' 기준';
+  const md=state.dailies.filter(d=>(d.date||'').slice(0,7)===ym);
+  const mt=state.todos.filter(t=>(t.date||'').slice(0,7)===ym);
+  const mode=(arr,key)=>{ const c={}; arr.forEach(x=>{ const v=x[key]; if(v) c[v]=(c[v]||0)+1; }); let best=null,n=0; for(const k in c){ if(c[k]>n){ n=c[k]; best=k; } } return best; };
+  const topMood=mode(md,'mood'), topCat=mode(md,'category');
+  const todoDone=mt.filter(t=>t.done).length;
+  const goalDone=state.goals.filter(g=>g.status==='완료').length;
+  const tiles=[
+    {val:md.length, label:'이번 달 기록'},
+    {val:topMood?`${moodEmoji(topMood)} ${topMood}`:'-', label:'많이 느낀 감정'},
+    {val:topCat||'-', label:'자주 쓴 카테고리'},
+    {val:`${todoDone}/${mt.length}`, label:'완료한 할 일'},
+    {val:`${goalDone}/${state.goals.length}`, label:'완료한 목표'}
+  ];
+  el.innerHTML=tiles.map(t=>`<div class="report-tile"><div class="rt-val">${esc(String(t.val))}</div><div class="rt-label">${esc(t.label)}</div></div>`).join('');
+}
 /* ============ 전체 검색 ============ */
 function openSearch(){
   showModal('searchModal');
@@ -1915,20 +1953,27 @@ function renderSearch(){
   const q=document.getElementById('searchInput').value.trim().toLowerCase();
   const box=document.getElementById('searchResults');
   if(!q){ box.innerHTML='<div class="empty">검색어를 입력하세요</div>'; return; }
-  const hits=[];
-  state.goals.forEach(g=>{ if((g.title||'').toLowerCase().includes(q)) hits.push({ico:'🎯',type:'목표',title:g.title,sub:goalPeriodLabel(g),open:`openGoalModal('${g.id}')`}); });
-  state.dailies.forEach(d=>{ if(((d.title||'')+' '+(d.content||'')+' '+(d.tomorrowTask||'')).toLowerCase().includes(q)) hits.push({ico:moodEmoji(d.mood),type:'기록',title:d.title||'(제목 없음)',sub:(d.date||'')+' · '+(d.category||''),open:`openDailyModal('${d.id}')`}); });
-  state.todos.forEach(t=>{ if((t.title||'').toLowerCase().includes(q)) hits.push({ico:'✅',type:'할 일',title:t.title,sub:(t.date||'')+(t.done?' · 완료':''),open:`openTodoModal('${t.id}')`}); });
-  state.memos.forEach(m=>{ if((m.content||'').toLowerCase().includes(q)) hits.push({ico:'💡',type:'메모',title:(m.content||'').slice(0,50),sub:m.status||'',open:`openMemoModal('${m.id}')`}); });
-  if(!hits.length){ box.innerHTML='<div class="empty">결과가 없어요</div>'; return; }
-  box.innerHTML=hits.map(h=>`
+  const groups={'목표':[],'기록':[],'할 일':[],'메모':[]};
+  state.goals.forEach(g=>{ if((g.title||'').toLowerCase().includes(q)) groups['목표'].push({ico:'🎯',title:g.title,sub:goalPeriodLabel(g),open:`openGoalModal('${g.id}')`}); });
+  state.dailies.forEach(d=>{ if(((d.title||'')+' '+(d.content||'')+' '+(d.tomorrowTask||'')).toLowerCase().includes(q)) groups['기록'].push({ico:moodEmoji(d.mood),title:d.title||'(제목 없음)',sub:(d.date||'')+' · '+(d.category||''),open:`openDailyModal('${d.id}')`}); });
+  state.todos.forEach(t=>{ if((t.title||'').toLowerCase().includes(q)) groups['할 일'].push({ico:'✅',title:t.title,sub:(t.date||'')+(t.done?' · 완료':''),open:`openTodoModal('${t.id}')`}); });
+  state.memos.forEach(m=>{ if((m.content||'').toLowerCase().includes(q)) groups['메모'].push({ico:'💡',title:(m.content||'').slice(0,50),sub:m.status||'',open:`openMemoModal('${m.id}')`}); });
+  const total=Object.values(groups).reduce((s,a)=>s+a.length,0);
+  if(!total){ box.innerHTML='<div class="empty">결과가 없어요</div>'; return; }
+  let html='';
+  for(const type of ['목표','기록','할 일','메모']){
+    const arr=groups[type]; if(!arr.length) continue;
+    html+=`<div class="search-group-title">${type} (${arr.length})</div>`;
+    html+=arr.map(h=>`
     <div class="search-hit" role="button" tabindex="0" onclick="${h.open}">
       <span class="sh-ico">${h.ico}</span>
       <div class="sh-body">
-        <div class="sh-top"><span class="tag">${h.type}</span> <b>${esc(h.title)}</b></div>
+        <div class="sh-top"><b>${esc(h.title)}</b></div>
         <div class="sh-sub">${esc(h.sub)}</div>
       </div>
     </div>`).join('');
+  }
+  box.innerHTML=html;
 }
 
 /* ============ 초기화 ============ */
