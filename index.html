@@ -260,6 +260,7 @@
   .report-tile{background:var(--bg-soft);border:1px solid var(--line);border-radius:14px;padding:14px 12px;text-align:center}
   .report-tile .rt-val{font-size:1.5rem;font-weight:700;color:var(--purple);line-height:1.2}
   .report-tile .rt-label{font-size:.76rem;color:var(--text-soft);margin-top:4px}
+  .report-tile .rt-delta{font-size:.7rem;font-weight:700;margin-top:4px}
   /* 전체 검색 결과 */
   .search-group-title{font-size:.78rem;font-weight:700;color:var(--purple);margin:12px 0 6px;letter-spacing:.5px}
   .search-group-title:first-child{margin-top:0}
@@ -413,7 +414,7 @@
     </section>
   </div>
 
-  <div class="footer">DAY BLOOM · 데이터는 이 브라우저에만 저장돼요 (LocalStorage)</div>
+  <div class="footer">DAY BLOOM · 데이터는 이 브라우저에만 저장돼요 (브라우저 저장소)</div>
 </div>
 
 <!-- ===== Modals ===== -->
@@ -1928,20 +1929,33 @@ function renderReport(){
   const el=document.getElementById('reportBody'); if(!el) return;
   const ym=todayStr().slice(0,7);
   const mLabel=document.getElementById('reportMonth'); if(mLabel) mLabel.textContent=ym.replace('-','. ')+' 기준';
+  // 지난달 ym 계산
+  const d0=new Date(); const lmD=new Date(d0.getFullYear(), d0.getMonth()-1, 1);
+  const lym=lmD.getFullYear()+'-'+String(lmD.getMonth()+1).padStart(2,'0');
   const md=state.dailies.filter(d=>(d.date||'').slice(0,7)===ym);
+  const lmd=state.dailies.filter(d=>(d.date||'').slice(0,7)===lym);
   const mt=state.todos.filter(t=>(t.date||'').slice(0,7)===ym);
+  const lmt=state.todos.filter(t=>(t.date||'').slice(0,7)===lym);
   const mode=(arr,key)=>{ const c={}; arr.forEach(x=>{ const v=x[key]; if(v) c[v]=(c[v]||0)+1; }); let best=null,n=0; for(const k in c){ if(c[k]>n){ n=c[k]; best=k; } } return best; };
   const topMood=mode(md,'mood'), topCat=mode(md,'category');
-  const todoDone=mt.filter(t=>t.done).length;
+  const todoDone=mt.filter(t=>t.done).length, lTodoDone=lmt.filter(t=>t.done).length;
   const goalDone=state.goals.filter(g=>g.status==='완료').length;
   const tiles=[
-    {val:md.length, label:'이번 달 기록'},
+    {val:md.length, label:'이번 달 기록', delta:md.length-lmd.length},
     {val:topMood?`${moodEmoji(topMood)} ${topMood}`:'-', label:'많이 느낀 감정'},
     {val:topCat||'-', label:'자주 쓴 카테고리'},
-    {val:`${todoDone}/${mt.length}`, label:'완료한 할 일'},
+    {val:`${todoDone}/${mt.length}`, label:'완료한 할 일', delta:todoDone-lTodoDone},
     {val:`${goalDone}/${state.goals.length}`, label:'완료한 목표'}
   ];
-  el.innerHTML=tiles.map(t=>`<div class="report-tile"><div class="rt-val">${esc(String(t.val))}</div><div class="rt-label">${esc(t.label)}</div></div>`).join('');
+  el.innerHTML=tiles.map(t=>{
+    let deltaHtml='';
+    if(t.delta!=null){
+      const col=t.delta>0?'var(--purple)':'var(--text-soft)';
+      const sign=t.delta>0?'+':'';
+      deltaHtml=`<div class="rt-delta" style="color:${col}">지난달 대비 ${sign}${t.delta}</div>`;
+    }
+    return `<div class="report-tile"><div class="rt-val">${esc(String(t.val))}</div><div class="rt-label">${esc(t.label)}</div>${deltaHtml}</div>`;
+  }).join('');
 }
 /* ============ 전체 검색 ============ */
 function openSearch(){
@@ -1953,15 +1967,17 @@ function renderSearch(){
   const q=document.getElementById('searchInput').value.trim().toLowerCase();
   const box=document.getElementById('searchResults');
   if(!q){ box.innerHTML='<div class="empty">검색어를 입력하세요</div>'; return; }
-  const groups={'목표':[],'기록':[],'할 일':[],'메모':[]};
-  state.goals.forEach(g=>{ if((g.title||'').toLowerCase().includes(q)) groups['목표'].push({ico:'🎯',title:g.title,sub:goalPeriodLabel(g),open:`openGoalModal('${g.id}')`}); });
-  state.dailies.forEach(d=>{ if(((d.title||'')+' '+(d.content||'')+' '+(d.tomorrowTask||'')).toLowerCase().includes(q)) groups['기록'].push({ico:moodEmoji(d.mood),title:d.title||'(제목 없음)',sub:(d.date||'')+' · '+(d.category||''),open:`openDailyModal('${d.id}')`}); });
-  state.todos.forEach(t=>{ if((t.title||'').toLowerCase().includes(q)) groups['할 일'].push({ico:'✅',title:t.title,sub:(t.date||'')+(t.done?' · 완료':''),open:`openTodoModal('${t.id}')`}); });
-  state.memos.forEach(m=>{ if((m.content||'').toLowerCase().includes(q)) groups['메모'].push({ico:'💡',title:(m.content||'').slice(0,50),sub:m.status||'',open:`openMemoModal('${m.id}')`}); });
+  // 제목·내용뿐 아니라 날짜(2026-06 등)·카테고리·기간·설명까지 검색
+  const groups={'목표':[],'기록':[],'할 일':[],'메모':[],'비전보드':[]};
+  state.goals.forEach(g=>{ if(((g.title||'')+' '+(g.periodStart||'')+' '+(g.periodEnd||'')).toLowerCase().includes(q)) groups['목표'].push({ico:'🎯',title:g.title,sub:goalPeriodLabel(g),open:`openGoalModal('${g.id}')`}); });
+  state.dailies.forEach(d=>{ if(((d.title||'')+' '+(d.content||'')+' '+(d.tomorrowTask||'')+' '+(d.date||'')+' '+(d.category||'')+' '+(d.mood||'')).toLowerCase().includes(q)) groups['기록'].push({ico:moodEmoji(d.mood),title:d.title||'(제목 없음)',sub:(d.date||'')+' · '+(d.category||''),open:`openDailyModal('${d.id}')`}); });
+  state.todos.forEach(t=>{ if(((t.title||'')+' '+(t.date||'')).toLowerCase().includes(q)) groups['할 일'].push({ico:'✅',title:t.title,sub:(t.date||'')+(t.done?' · 완료':''),open:`openTodoModal('${t.id}')`}); });
+  state.memos.forEach(m=>{ if(((m.content||'')+' '+(m.status||'')).toLowerCase().includes(q)) groups['메모'].push({ico:'💡',title:(m.content||'').slice(0,50),sub:m.status||'',open:`openMemoModal('${m.id}')`}); });
+  state.visions.forEach(v=>{ if((v.description||'').toLowerCase().includes(q)) groups['비전보드'].push({ico:'🖼️',title:v.description||'(설명 없음)',sub:v.isMain?'대표 이미지':'',open:`openVisionDesc('${v.id}')`}); });
   const total=Object.values(groups).reduce((s,a)=>s+a.length,0);
   if(!total){ box.innerHTML='<div class="empty">결과가 없어요</div>'; return; }
   let html='';
-  for(const type of ['목표','기록','할 일','메모']){
+  for(const type of ['목표','기록','할 일','메모','비전보드']){
     const arr=groups[type]; if(!arr.length) continue;
     html+=`<div class="search-group-title">${type} (${arr.length})</div>`;
     html+=arr.map(h=>`

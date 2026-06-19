@@ -4,7 +4,7 @@
    - 페이지(HTML)는 'network-first': 온라인이면 항상 최신을 받고, 오프라인이면 캐시로 폴백.
    - 아이콘·매니페스트 등 정적 파일은 'cache-first'로 빠르게.
    - 새 버전은 자동 적용하지 않고 '대기'하다가, 사용자가 안내에서 동의(SKIP_WAITING)하면 적용됩니다. */
-const CACHE = 'day-bloom-v9';
+const CACHE = 'day-bloom-v10';
 const ASSETS = [
   './manifest.json',
   './day-bloom-icon-180.png',
