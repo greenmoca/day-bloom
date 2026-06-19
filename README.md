@@ -1,6 +1,10 @@
+![DAY BLOOM](day-bloom-banner.png)
+
 # DAY BLOOM 🌸
 
 > 나만의 하루를 피워내는 공간
+>
+> 🔗 라이브: https://greenmoca.github.io/day-bloom/
 
 목표·하루 기록·할 일·메모·비전보드·날씨를 한 화면에서 관리하는 개인 다이어리 웹앱입니다. 보라색 테마의 차분한 카드형 대시보드로, 별도 설치 없이 브라우저에서 바로 쓸 수 있고 PWA로 설치도 가능합니다.
 

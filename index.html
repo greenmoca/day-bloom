@@ -566,19 +566,55 @@ const DEFAULT_STATE={
   goals:[], dailies:[], memos:[], visions:[], todos:[],
   settings:{theme:'#7C5CFC', accent:'#B388FF', soft:'#EDE7FF', fontSize:'16', lastBackup:'', onboarded:false}
 };
-let state=load();
+let state=null;  // boot()에서 비동기로 로드
 
-function load(){
-  try{
-    const raw=localStorage.getItem(KEY);
-    if(!raw) return seed();
-    const s=JSON.parse(raw);
-    return Object.assign({}, JSON.parse(JSON.stringify(DEFAULT_STATE)), s,
-      {settings:Object.assign({}, DEFAULT_STATE.settings, s.settings||{})});
-  }catch(e){ return seed(); }
+/* ---- IndexedDB 저장소 (LocalStorage 약 5MB 한계 → 수백MB~GB) ---- */
+const DB_NAME='dayBloomDB', STORE='kv', STATE_KEY='state';
+let idbOK=('indexedDB' in window);
+function idbOpen(){
+  return new Promise((res,rej)=>{
+    const r=indexedDB.open(DB_NAME,1);
+    r.onupgradeneeded=()=>{ if(!r.result.objectStoreNames.contains(STORE)) r.result.createObjectStore(STORE); };
+    r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error);
+  });
 }
-// 저장: 성공 시 true. 용량 초과 등 실패 시 경고 후 false (앱이 멈추지 않도록)
-function save(){
+function idbGet(key){
+  return idbOpen().then(db=>new Promise((res,rej)=>{
+    const t=db.transaction(STORE,'readonly').objectStore(STORE).get(key);
+    t.onsuccess=()=>res(t.result); t.onerror=()=>rej(t.error);
+  }));
+}
+function idbPut(val,key){
+  return idbOpen().then(db=>new Promise((res,rej)=>{
+    const tx=db.transaction(STORE,'readwrite');
+    tx.objectStore(STORE).put(val,key||STATE_KEY);
+    tx.oncomplete=()=>res(true); tx.onerror=()=>rej(tx.error);
+  }));
+}
+function mergeDefaults(s){
+  return Object.assign({}, JSON.parse(JSON.stringify(DEFAULT_STATE)), s,
+    {settings:Object.assign({}, DEFAULT_STATE.settings, (s&&s.settings)||{})});
+}
+// 시작 시 로드: IndexedDB 우선 → 없으면 기존 LocalStorage에서 1회 이전(마이그레이션)
+async function loadState(){
+  if(idbOK){
+    try{
+      const rec=await idbGet(STATE_KEY);
+      if(rec) return mergeDefaults(rec);
+      const raw=localStorage.getItem(KEY);
+      if(raw){ const s=mergeDefaults(JSON.parse(raw)); try{await idbPut(s);}catch(e){} return s; }
+      const s=seed(); try{await idbPut(s);}catch(e){} return s;
+    }catch(e){ idbOK=false; }
+  }
+  try{ const raw=localStorage.getItem(KEY); if(raw) return mergeDefaults(JSON.parse(raw)); }catch(e){}
+  return seed();
+}
+// 저장: IndexedDB 우선, 실패 시 LocalStorage. 성공 true / 실패 false (await 가능)
+async function save(){
+  if(idbOK){
+    try{ await idbPut(state); return true; }
+    catch(e){ idbOK=false; }
+  }
   try{ localStorage.setItem(KEY, JSON.stringify(state)); return true; }
   catch(e){
     toast('⚠ 저장 공간이 가득 찼어요. 설정에서 백업 후 비전보드 이미지를 줄여 주세요.');
@@ -1256,19 +1292,20 @@ function renderVisions(){
   grid.innerHTML=html;
   updateVisionUsage();
 }
-// 저장공간 사용량 표시 (LocalStorage 약 5MB 기준)
-const STORAGE_LIMIT=5*1024*1024;  // ~5MB
+// 저장공간 사용량 표시 (IndexedDB 실제 quota 기준, 추정 가능할 때)
 function bytesOf(str){ try{ return new Blob([str]).size; }catch(e){ return (str||'').length; } }
-function fmtMB(b){ return (b/1024/1024).toFixed(1)+'MB'; }
-function updateVisionUsage(){
+function fmtSize(b){ return b>=1073741824 ? (b/1073741824).toFixed(1)+'GB' : (b/1048576).toFixed(1)+'MB'; }
+async function updateVisionUsage(){
   const el=document.getElementById('visionUsage'); if(!el) return;
   const total=bytesOf(JSON.stringify(state));
   const vision=state.visions.reduce((s,v)=>s+bytesOf(v.imageUrl||''),0);
-  const pct=Math.min(100, Math.round(total/STORAGE_LIMIT*100));
-  const warn=pct>=80;
+  let quota=null;
+  try{ if(navigator.storage&&navigator.storage.estimate){ const est=await navigator.storage.estimate(); quota=est.quota||null; } }catch(e){}
+  const pct=quota?Math.min(100,Math.round(total/quota*100)):0;
+  const warn=quota&&pct>=80;
   el.className='vision-usage'+(warn?' warn':'');
-  el.innerHTML=`이미지 ${state.visions.length}개 · 비전보드 ${fmtMB(vision)} · 전체 ${fmtMB(total)} / 약 5MB`
-    +`<div class="ufill-track"><div class="ufill-bar" style="width:${pct}%"></div></div>`
+  el.innerHTML=`이미지 ${state.visions.length}개 · 비전보드 ${fmtSize(vision)} · 전체 사용 ${fmtSize(total)}${quota?` / 가용 ${fmtSize(quota)}`:''}`
+    +(quota?`<div class="ufill-track"><div class="ufill-bar" style="width:${Math.max(pct,1)}%"></div></div>`:'')
     +(warn?`<div style="margin-top:4px">⚠ 저장공간이 거의 찼어요. 설정에서 백업 후 이미지를 줄여 주세요.</div>`:'');
 }
 // 업로드 이미지를 캔버스로 리사이즈·압축 → 저장 용량 대폭 절약
@@ -1312,7 +1349,7 @@ async function handleVisionUpload(e){
   }catch(err){ toast('이미지를 처리하지 못했어요'); return; }
   const v={id:uid(),imageUrl:dataUrl,description:'',linkedGoalId:'',isMain:state.visions.length===0,createdAt:now()};
   state.visions.push(v);
-  if(save()){ renderVisions(); toast(isGif?'GIF를 추가했어요 ✨':'비전보드에 추가됐어요 ✨ (자동 압축)'); }
+  if(await save()){ renderVisions(); toast(isGif?'GIF를 추가했어요 ✨':'비전보드에 추가됐어요 ✨ (자동 압축)'); }
   else{ state.visions.pop(); renderVisions(); }  // 저장 실패 시 추가 취소
 }
 function openVisionDesc(id){
@@ -1612,7 +1649,7 @@ function importData(e){
   reader.readAsText(file); e.target.value='';
 }
 const IMPORT_KEYS=['goals','dailies','memos','todos','visions'];
-function applyImport(s, mode){
+async function applyImport(s, mode){
   if(mode==='merge'){
     // id가 없는(새로운) 항목만 뒤에 추가 → 중복 방지
     IMPORT_KEYS.forEach(k=>{
@@ -1626,7 +1663,7 @@ function applyImport(s, mode){
     const safe=(s.settings && typeof s.settings==='object' && !Array.isArray(s.settings))?s.settings:{};
     state=Object.assign(JSON.parse(JSON.stringify(DEFAULT_STATE)), clean, {settings:Object.assign({},DEFAULT_STATE.settings,safe)});
   }
-  if(save()){ renderAll(); applyTheme(); applyFontSize(state.settings.fontSize); toast(mode==='merge'?'기존 데이터에 합쳤어요 ✅':'데이터를 불러왔어요 ✅'); }
+  if(await save()){ renderAll(); applyTheme(); applyFontSize(state.settings.fontSize); toast(mode==='merge'?'기존 데이터에 합쳤어요 ✅':'데이터를 불러왔어요 ✅'); }
 }
 
 /* ============ TODO (할 일) ============ */
@@ -1815,16 +1852,21 @@ function closeConfirm(kind){
 function renderAll(){ renderGoals(); renderDailyFilters(); renderDailies(); renderMemos(); renderVisions(); renderCalendar(); }
 
 /* ============ 초기화 ============ */
-applyTheme();
-applyFontSize(state.settings.fontSize);
-renderHeader();
-renderAll();
-renderWeather();
-startWeatherAutoRefresh();
-updateOnlineStatus();
-// 첫 방문이면 환영 온보딩을, 아니면 백업 안내를 (둘이 겹치지 않게)
-if(!state.settings.onboarded){ setTimeout(()=>showModal('onboardModal'),500); }
-else { backupNudge(); }
+// 데이터(IndexedDB)를 먼저 비동기로 불러온 뒤 화면을 그린다
+async function boot(){
+  state = await loadState();
+  applyTheme();
+  applyFontSize(state.settings.fontSize);
+  renderHeader();
+  renderAll();
+  renderWeather();
+  startWeatherAutoRefresh();
+  updateOnlineStatus();
+  // 첫 방문이면 환영 온보딩을, 아니면 백업 안내를 (둘이 겹치지 않게)
+  if(!state.settings.onboarded){ setTimeout(()=>showModal('onboardModal'),500); }
+  else { backupNudge(); }
+}
+boot();
 // PWA 서비스 워커 등록 (http/https에서만 — 로컬 file://에서는 동작 안 함)
 // 새 버전은 자동 적용하지 않고, 사용자가 안내에서 '새로고침'을 누를 때만 적용
 if('serviceWorker' in navigator && location.protocol.startsWith('http')){
