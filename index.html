@@ -253,6 +253,14 @@
   .toast-undo{margin-left:12px;background:var(--purple-accent);color:#fff;border:none;border-radius:8px;padding:4px 11px;font-size:.8rem;cursor:pointer;font-weight:700}
   .toast-undo:hover{filter:brightness(1.08)}
   .offline-chip{display:inline-block;font-size:.7rem;font-weight:600;color:#9a93ab;background:#f0eef7;border:1px solid var(--line);border-radius:999px;padding:1px 9px;vertical-align:middle;margin-left:4px}
+  /* 전체 검색 결과 */
+  .search-hit{display:flex;gap:11px;align-items:flex-start;padding:11px;border:1px solid var(--line);border-radius:12px;margin-bottom:8px;cursor:pointer;transition:.15s}
+  .search-hit:hover{border-color:var(--purple-accent);background:var(--bg-soft)}
+  .search-hit .sh-ico{font-size:1.2rem;width:28px;text-align:center;flex:none}
+  .search-hit .sh-body{min-width:0;flex:1}
+  .search-hit .sh-top{display:flex;gap:7px;align-items:center}
+  .search-hit .sh-top b{word-break:break-word}
+  .search-hit .sh-sub{font-size:.78rem;color:var(--text-soft);margin-top:3px}
   /* 비전보드 저장공간 사용량 */
   .vision-usage{margin-top:12px;font-size:.74rem;color:var(--text-soft)}
   .vision-usage .ufill-track{height:6px;background:var(--bg-soft);border:1px solid var(--line);border-radius:999px;overflow:hidden;margin-top:5px}
@@ -295,6 +303,7 @@
     <div class="head-right">
       <div class="today-date"><span id="todayDate"></span> <span id="offlineChip" class="offline-chip" style="display:none">● 오프라인</span></div>
       <div class="quote" id="dailyQuote" title="클릭하면 다른 문구로 바뀌어요"></div>
+      <button class="btn-settings" onclick="openSearch()" aria-label="검색">🔍 검색</button>
       <button class="btn-settings" id="installBtn" onclick="installApp()">📲 앱 설치</button>
       <button class="btn-settings" onclick="openSettings()">⚙ 설정</button>
     </div>
@@ -378,6 +387,7 @@
     <section class="card col-span-2">
       <div class="card-head">
         <div class="card-title"><span class="dot"></span>Vision Board</div>
+        <button class="mini-btn" onclick="document.getElementById('visionFile').click()" title="이미지 업로드" aria-label="이미지 업로드">+</button>
       </div>
       <div class="vision-grid" id="visionGrid"></div>
       <input type="file" id="visionFile" accept="image/*" style="display:none" onchange="handleVisionUpload(event)" />
@@ -519,6 +529,16 @@
     </div>
     <div class="modal-actions">
       <button class="btn btn-primary" onclick="saveSettings()">완료</button>
+    </div>
+  </div>
+
+  <!-- Search modal (전체 검색) -->
+  <div class="modal" id="searchModal" style="display:none;max-width:560px">
+    <h2>전체 검색</h2>
+    <input id="searchInput" class="memo-search" placeholder="🔍 목표·기록·할 일·메모에서 검색..." oninput="renderSearch()" style="margin-bottom:14px" />
+    <div id="searchResults" style="max-height:50vh;overflow:auto"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModals()">닫기</button>
     </div>
   </div>
 
@@ -1825,7 +1845,7 @@ let openModalId=null;
 function showModal(id){
   openModalId=id;
   document.getElementById('overlay').classList.add('open');
-  ['goalModal','dailyModal','memoModal','visionModal','settingsModal','todoModal','dayModal','confirmModal','onboardModal'].forEach(m=>document.getElementById(m).style.display=(m===id)?'block':'none');
+  ['goalModal','dailyModal','memoModal','visionModal','settingsModal','todoModal','dayModal','confirmModal','onboardModal','searchModal'].forEach(m=>document.getElementById(m).style.display=(m===id)?'block':'none');
   // 첫 입력/버튼에 포커스 (접근성)
   setTimeout(()=>{ const f=document.getElementById(id).querySelector('input,select,textarea,button,[tabindex="0"]'); if(f) f.focus(); },30);
 }
@@ -1885,6 +1905,31 @@ function closeConfirm(kind){
   else if(kind==='alt' && alt) alt();
 }
 function renderAll(){ renderGoals(); renderDailyFilters(); renderDailies(); renderMemos(); renderVisions(); renderCalendar(); }
+/* ============ 전체 검색 ============ */
+function openSearch(){
+  showModal('searchModal');
+  document.getElementById('searchInput').value='';
+  document.getElementById('searchResults').innerHTML='<div class="empty">검색어를 입력하세요</div>';
+}
+function renderSearch(){
+  const q=document.getElementById('searchInput').value.trim().toLowerCase();
+  const box=document.getElementById('searchResults');
+  if(!q){ box.innerHTML='<div class="empty">검색어를 입력하세요</div>'; return; }
+  const hits=[];
+  state.goals.forEach(g=>{ if((g.title||'').toLowerCase().includes(q)) hits.push({ico:'🎯',type:'목표',title:g.title,sub:goalPeriodLabel(g),open:`openGoalModal('${g.id}')`}); });
+  state.dailies.forEach(d=>{ if(((d.title||'')+' '+(d.content||'')+' '+(d.tomorrowTask||'')).toLowerCase().includes(q)) hits.push({ico:moodEmoji(d.mood),type:'기록',title:d.title||'(제목 없음)',sub:(d.date||'')+' · '+(d.category||''),open:`openDailyModal('${d.id}')`}); });
+  state.todos.forEach(t=>{ if((t.title||'').toLowerCase().includes(q)) hits.push({ico:'✅',type:'할 일',title:t.title,sub:(t.date||'')+(t.done?' · 완료':''),open:`openTodoModal('${t.id}')`}); });
+  state.memos.forEach(m=>{ if((m.content||'').toLowerCase().includes(q)) hits.push({ico:'💡',type:'메모',title:(m.content||'').slice(0,50),sub:m.status||'',open:`openMemoModal('${m.id}')`}); });
+  if(!hits.length){ box.innerHTML='<div class="empty">결과가 없어요</div>'; return; }
+  box.innerHTML=hits.map(h=>`
+    <div class="search-hit" role="button" tabindex="0" onclick="${h.open}">
+      <span class="sh-ico">${h.ico}</span>
+      <div class="sh-body">
+        <div class="sh-top"><span class="tag">${h.type}</span> <b>${esc(h.title)}</b></div>
+        <div class="sh-sub">${esc(h.sub)}</div>
+      </div>
+    </div>`).join('');
+}
 
 /* ============ 초기화 ============ */
 // 데이터(IndexedDB)를 먼저 비동기로 불러온 뒤 화면을 그린다
