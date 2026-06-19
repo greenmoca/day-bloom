@@ -295,7 +295,7 @@
     <div class="head-right">
       <div class="today-date"><span id="todayDate"></span> <span id="offlineChip" class="offline-chip" style="display:none">● 오프라인</span></div>
       <div class="quote" id="dailyQuote" title="클릭하면 다른 문구로 바뀌어요"></div>
-      <button class="btn-settings" id="installBtn" style="display:none" onclick="installApp()">📲 앱 설치</button>
+      <button class="btn-settings" id="installBtn" onclick="installApp()">📲 앱 설치</button>
       <button class="btn-settings" onclick="openSettings()">⚙ 설정</button>
     </div>
   </header>
@@ -1903,7 +1903,10 @@ async function boot(){
   else { backupNudge(); }
 }
 boot();
-// PWA 설치: 안드로이드 크롬은 beforeinstallprompt로 '앱 설치' 버튼 노출
+// PWA 설치: 버튼은 기본 노출, 이미 설치된(standalone) 상태에서만 숨김
+if(window.matchMedia('(display-mode: standalone)').matches || navigator.standalone){
+  const b=document.getElementById('installBtn'); if(b) b.style.display='none';
+}
 let deferredPrompt=null;
 window.addEventListener('beforeinstallprompt', e=>{
   e.preventDefault(); deferredPrompt=e;
