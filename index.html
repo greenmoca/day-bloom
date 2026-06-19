@@ -253,6 +253,12 @@
   .toast-undo{margin-left:12px;background:var(--purple-accent);color:#fff;border:none;border-radius:8px;padding:4px 11px;font-size:.8rem;cursor:pointer;font-weight:700}
   .toast-undo:hover{filter:brightness(1.08)}
   .offline-chip{display:inline-block;font-size:.7rem;font-weight:600;color:#9a93ab;background:#f0eef7;border:1px solid var(--line);border-radius:999px;padding:1px 9px;vertical-align:middle;margin-left:4px}
+  /* 비전보드 저장공간 사용량 */
+  .vision-usage{margin-top:12px;font-size:.74rem;color:var(--text-soft)}
+  .vision-usage .ufill-track{height:6px;background:var(--bg-soft);border:1px solid var(--line);border-radius:999px;overflow:hidden;margin-top:5px}
+  .vision-usage .ufill-bar{height:100%;background:linear-gradient(90deg,var(--purple),var(--purple-accent));border-radius:999px;transition:width .3s}
+  .vision-usage.warn{color:#e0457b}
+  .vision-usage.warn .ufill-bar{background:#e0457b}
   /* 온보딩(첫 방문 환영 카드) */
   .ob-hero{text-align:center;margin-bottom:6px}
   .ob-mark{width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,var(--purple),var(--purple-accent));display:inline-grid;place-items:center;margin-bottom:10px}
@@ -374,6 +380,7 @@
       </div>
       <div class="vision-grid" id="visionGrid"></div>
       <input type="file" id="visionFile" accept="image/*" style="display:none" onchange="handleVisionUpload(event)" />
+      <div id="visionUsage" class="vision-usage"></div>
     </section>
   </div>
 
@@ -1247,6 +1254,22 @@ function renderVisions(){
   html+=`<div class="vision-add" role="button" tabindex="0" aria-label="이미지 추가" onclick="document.getElementById('visionFile').click()">
       <div><div class="plus">+</div>이미지 추가</div></div>`;
   grid.innerHTML=html;
+  updateVisionUsage();
+}
+// 저장공간 사용량 표시 (LocalStorage 약 5MB 기준)
+const STORAGE_LIMIT=5*1024*1024;  // ~5MB
+function bytesOf(str){ try{ return new Blob([str]).size; }catch(e){ return (str||'').length; } }
+function fmtMB(b){ return (b/1024/1024).toFixed(1)+'MB'; }
+function updateVisionUsage(){
+  const el=document.getElementById('visionUsage'); if(!el) return;
+  const total=bytesOf(JSON.stringify(state));
+  const vision=state.visions.reduce((s,v)=>s+bytesOf(v.imageUrl||''),0);
+  const pct=Math.min(100, Math.round(total/STORAGE_LIMIT*100));
+  const warn=pct>=80;
+  el.className='vision-usage'+(warn?' warn':'');
+  el.innerHTML=`이미지 ${state.visions.length}개 · 비전보드 ${fmtMB(vision)} · 전체 ${fmtMB(total)} / 약 5MB`
+    +`<div class="ufill-track"><div class="ufill-bar" style="width:${pct}%"></div></div>`
+    +(warn?`<div style="margin-top:4px">⚠ 저장공간이 거의 찼어요. 설정에서 백업 후 이미지를 줄여 주세요.</div>`:'');
 }
 // 업로드 이미지를 캔버스로 리사이즈·압축 → 저장 용량 대폭 절약
 function compressImage(file, maxDim, quality){
