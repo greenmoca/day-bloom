@@ -254,7 +254,7 @@
   .toast-undo:hover{filter:brightness(1.08)}
   .offline-chip{display:inline-block;font-size:.7rem;font-weight:600;color:#9a93ab;background:#f0eef7;border:1px solid var(--line);border-radius:999px;padding:1px 9px;vertical-align:middle;margin-left:4px}
   /* 월간 리포트 */
-  .report-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+  .report-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
   @media(max-width:900px){.report-grid{grid-template-columns:repeat(2,1fr)}}
   @media(max-width:640px){.report-grid{grid-template-columns:repeat(2,1fr)}}
   .report-tile{background:var(--bg-soft);border:1px solid var(--line);border-radius:14px;padding:14px 12px;text-align:center}
@@ -1940,10 +1940,15 @@ function renderReport(){
   const topMood=mode(md,'mood'), topCat=mode(md,'category');
   const todoDone=mt.filter(t=>t.done).length, lTodoDone=lmt.filter(t=>t.done).length;
   const goalDone=state.goals.filter(g=>g.status==='완료').length;
+  // 이번 달 기록을 가장 많이 한 요일
+  const DOW=['일','월','화','수','목','금','토'];
+  const dowCount={}; md.forEach(d=>{ const dt=new Date(d.date); if(!isNaN(dt)){ const w=dt.getDay(); dowCount[w]=(dowCount[w]||0)+1; } });
+  let topDow=null,dn=0; for(const k in dowCount){ if(dowCount[k]>dn){ dn=dowCount[k]; topDow=k; } }
   const tiles=[
     {val:md.length, label:'이번 달 기록', delta:md.length-lmd.length},
     {val:topMood?`${moodEmoji(topMood)} ${topMood}`:'-', label:'많이 느낀 감정'},
     {val:topCat||'-', label:'자주 쓴 카테고리'},
+    {val:topDow!=null?`${DOW[topDow]}요일`:'-', label:'기록 많은 요일'},
     {val:`${todoDone}/${mt.length}`, label:'완료한 할 일', delta:todoDone-lTodoDone},
     {val:`${goalDone}/${state.goals.length}`, label:'완료한 목표'}
   ];
