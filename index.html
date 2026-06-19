@@ -295,6 +295,7 @@
     <div class="head-right">
       <div class="today-date"><span id="todayDate"></span> <span id="offlineChip" class="offline-chip" style="display:none">● 오프라인</span></div>
       <div class="quote" id="dailyQuote" title="클릭하면 다른 문구로 바뀌어요"></div>
+      <button class="btn-settings" id="installBtn" style="display:none" onclick="installApp()">📲 앱 설치</button>
       <button class="btn-settings" onclick="openSettings()">⚙ 설정</button>
     </div>
   </header>
@@ -590,6 +591,23 @@ function idbPut(val,key){
     tx.objectStore(STORE).put(val,key||STATE_KEY);
     tx.oncomplete=()=>res(true); tx.onerror=()=>rej(tx.error);
   }));
+}
+function idbDelete(key){
+  return idbOpen().then(db=>new Promise((res,rej)=>{
+    const tx=db.transaction(STORE,'readwrite');
+    tx.objectStore(STORE).delete(key);
+    tx.oncomplete=()=>res(true); tx.onerror=()=>rej(tx.error);
+  }));
+}
+// 이미지: base64 dataURL ↔ Blob 변환 (이미지는 state가 아니라 IndexedDB에 Blob으로 저장)
+function dataURLtoBlob(dataUrl){
+  const [h,b]=dataUrl.split(','); const mime=(h.match(/:(.*?);/)||[])[1]||'image/jpeg';
+  const bin=atob(b); const u8=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) u8[i]=bin.charCodeAt(i);
+  return new Blob([u8],{type:mime});
+}
+function blobToDataURL(blob){
+  return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(blob); });
 }
 function mergeDefaults(s){
   return Object.assign({}, JSON.parse(JSON.stringify(DEFAULT_STATE)), s,
@@ -1274,12 +1292,14 @@ function deleteMemo(id){
   toastUndo('메모를 삭제했어요', ()=>{ state.memos.splice(i,0,removed); save(); renderMemos(); });
 }
 
-/* ============ VISION BOARD ============ */
+/* ============ VISION BOARD (이미지는 IndexedDB에 Blob으로 저장) ============ */
+let visionURLs={};  // id -> objectURL (재렌더 시 해제)
 function renderVisions(){
+  Object.values(visionURLs).forEach(u=>{ try{URL.revokeObjectURL(u);}catch(e){} }); visionURLs={};
   const grid=document.getElementById('visionGrid');
   let html=state.visions.map(v=>`
     <div class="vision-cell ${v.isMain?'main':''}">
-      <img src="${v.imageUrl}" alt="${esc(v.description||'')}" />
+      <img id="vimg_${v.id}" alt="${esc(v.description||'')}" />
       ${v.description?`<div class="vision-cap">${esc(v.description)}</div>`:''}
       <div class="vision-tools">
         <button aria-label="설명 입력" onclick="openVisionDesc('${v.id}')" title="설명">✏</button>
@@ -1290,26 +1310,43 @@ function renderVisions(){
   html+=`<div class="vision-add" role="button" tabindex="0" aria-label="이미지 추가" onclick="document.getElementById('visionFile').click()">
       <div><div class="plus">+</div>이미지 추가</div></div>`;
   grid.innerHTML=html;
+  state.visions.forEach(v=>loadVisionImage(v.id));
   updateVisionUsage();
 }
-// 저장공간 사용량 표시 (IndexedDB 실제 quota 기준, 추정 가능할 때)
+// IndexedDB Blob을 objectURL로 만들어 표시
+async function loadVisionImage(id){
+  try{
+    const blob=await idbGet('img_'+id);
+    if(blob){ const url=URL.createObjectURL(blob); visionURLs[id]=url; const img=document.getElementById('vimg_'+id); if(img) img.src=url; }
+  }catch(e){}
+}
+// 기존 base64(imageUrl) 이미지를 Blob으로 1회 이전(마이그레이션)
+async function migrateVisionImages(){
+  let changed=false;
+  for(const v of state.visions){
+    if(v.imageUrl){ try{ await idbPut(dataURLtoBlob(v.imageUrl),'img_'+v.id); delete v.imageUrl; changed=true; }catch(e){} }
+  }
+  if(changed) await save();
+}
+// 사용량: state JSON + 이미지 Blob 합산
 function bytesOf(str){ try{ return new Blob([str]).size; }catch(e){ return (str||'').length; } }
 function fmtSize(b){ return b>=1073741824 ? (b/1073741824).toFixed(1)+'GB' : (b/1048576).toFixed(1)+'MB'; }
 async function updateVisionUsage(){
   const el=document.getElementById('visionUsage'); if(!el) return;
-  const total=bytesOf(JSON.stringify(state));
-  const vision=state.visions.reduce((s,v)=>s+bytesOf(v.imageUrl||''),0);
+  let vision=0;
+  for(const v of state.visions){ try{ const b=await idbGet('img_'+v.id); if(b) vision+=b.size; }catch(e){} }
+  const total=bytesOf(JSON.stringify(state))+vision;
   let quota=null;
   try{ if(navigator.storage&&navigator.storage.estimate){ const est=await navigator.storage.estimate(); quota=est.quota||null; } }catch(e){}
   const pct=quota?Math.min(100,Math.round(total/quota*100)):0;
   const warn=quota&&pct>=80;
   el.className='vision-usage'+(warn?' warn':'');
-  el.innerHTML=`이미지 ${state.visions.length}개 · 비전보드 ${fmtSize(vision)} · 전체 사용 ${fmtSize(total)}${quota?` / 가용 ${fmtSize(quota)}`:''}`
+  el.innerHTML=`이미지 ${state.visions.length}개 · 이미지 ${fmtSize(vision)} · 전체 사용 ${fmtSize(total)}${quota?` / 가용 ${fmtSize(quota)}`:''}`
     +(quota?`<div class="ufill-track"><div class="ufill-bar" style="width:${Math.max(pct,1)}%"></div></div>`:'')
     +(warn?`<div style="margin-top:4px">⚠ 저장공간이 거의 찼어요. 설정에서 백업 후 이미지를 줄여 주세요.</div>`:'');
 }
-// 업로드 이미지를 캔버스로 리사이즈·압축 → 저장 용량 대폭 절약
-function compressImage(file, maxDim, quality){
+// 업로드 이미지를 Blob으로 압축(JPEG). GIF는 애니메이션 보존 위해 원본 Blob 유지
+function compressImageBlob(file, maxDim, quality){
   return new Promise((resolve,reject)=>{
     const reader=new FileReader();
     reader.onload=e=>{
@@ -1319,38 +1356,28 @@ function compressImage(file, maxDim, quality){
         if(w>maxDim || h>maxDim){ const r=Math.min(maxDim/w, maxDim/h); w=Math.round(w*r); h=Math.round(h*r); }
         const cv=document.createElement('canvas'); cv.width=w; cv.height=h;
         cv.getContext('2d').drawImage(img,0,0,w,h);
-        resolve(cv.toDataURL('image/jpeg', quality));
+        cv.toBlob(b=>b?resolve(b):reject(new Error('toBlob')),'image/jpeg',quality);
       };
       img.onerror=reject; img.src=e.target.result;
     };
     reader.onerror=reject; reader.readAsDataURL(file);
   });
 }
-// 원본 그대로 data URL로 읽기 (GIF 애니메이션 보존용)
-function readAsDataURL(file){
-  return new Promise((resolve,reject)=>{
-    const reader=new FileReader();
-    reader.onload=e=>resolve(e.target.result);
-    reader.onerror=reject; reader.readAsDataURL(file);
-  });
-}
 async function handleVisionUpload(e){
   const file=e.target.files[0]; e.target.value=''; if(!file) return;
   if(!file.type.startsWith('image/')){ toast('이미지 파일만 추가할 수 있어요'); return; }
-  let dataUrl, isGif=file.type==='image/gif';
+  const isGif=file.type==='image/gif';
+  let blob;
   try{
-    if(isGif){
-      // GIF는 압축(캔버스)하면 애니메이션이 사라지므로 원본 유지 — 용량만 체크
-      if(file.size>2*1024*1024){ toast('GIF가 너무 커요 (2MB 이하 권장)'); return; }
-      dataUrl=await readAsDataURL(file);
-    }else{
-      dataUrl=await compressImage(file, 1000, 0.8);
-    }
+    if(isGif){ if(file.size>3*1024*1024){ toast('GIF가 너무 커요 (3MB 이하 권장)'); return; } blob=file; }
+    else { blob=await compressImageBlob(file, 1000, 0.8); }
   }catch(err){ toast('이미지를 처리하지 못했어요'); return; }
-  const v={id:uid(),imageUrl:dataUrl,description:'',linkedGoalId:'',isMain:state.visions.length===0,createdAt:now()};
+  const id=uid();
+  try{ await idbPut(blob,'img_'+id); }catch(err){ toast('이미지 저장에 실패했어요'); return; }
+  const v={id,description:'',linkedGoalId:'',isMain:state.visions.length===0,createdAt:now()};
   state.visions.push(v);
   if(await save()){ renderVisions(); toast(isGif?'GIF를 추가했어요 ✨':'비전보드에 추가됐어요 ✨ (자동 압축)'); }
-  else{ state.visions.pop(); renderVisions(); }  // 저장 실패 시 추가 취소
+  else{ state.visions.pop(); try{await idbDelete('img_'+id);}catch(e){} renderVisions(); }  // 실패 시 취소
 }
 function openVisionDesc(id){
   const v=state.visions.find(x=>x.id===id);
@@ -1364,11 +1391,12 @@ function saveVisionDesc(){
   save(); renderVisions(); closeModals();
 }
 function setMainVision(id){ state.visions.forEach(v=>v.isMain=v.id===id); save(); renderVisions(); toast('대표 이미지로 설정했어요 ⭐'); }
-function deleteVision(id){
+async function deleteVision(id){
   const i=state.visions.findIndex(x=>x.id===id); if(i<0) return;
   const removed=state.visions[i];
-  state.visions.splice(i,1); save(); renderVisions();
-  toastUndo('이미지를 삭제했어요', ()=>{ state.visions.splice(i,0,removed); save(); renderVisions(); });
+  let blob=null; try{ blob=await idbGet('img_'+id); }catch(e){}
+  state.visions.splice(i,1); try{await idbDelete('img_'+id);}catch(e){} save(); renderVisions();
+  toastUndo('이미지를 삭제했어요', async()=>{ state.visions.splice(i,0,removed); if(blob){ try{await idbPut(blob,'img_'+id);}catch(e){} } save(); renderVisions(); });
 }
 
 /* ============ WEATHER (Open-Meteo, 키 불필요) ============ */
@@ -1595,8 +1623,12 @@ function openSettings(){
 function saveSettings(){
   save(); closeModals(); toast('설정이 저장됐어요 ⚙');
 }
-function exportData(){
-  const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
+async function exportData(){
+  // 이미지(Blob)는 백업 파일에 base64로 함께 담아 포터블하게
+  const _images={};
+  for(const v of state.visions){ try{ const b=await idbGet('img_'+v.id); if(b) _images[v.id]=await blobToDataURL(b); }catch(e){} }
+  const payload=Object.assign({}, state, {_images});
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const a=document.createElement('a');
   a.href=URL.createObjectURL(blob); a.download='day-bloom-backup-'+todayStr()+'.json'; a.click();
   state.settings.lastBackup=todayStr(); save();
@@ -1663,6 +1695,9 @@ async function applyImport(s, mode){
     const safe=(s.settings && typeof s.settings==='object' && !Array.isArray(s.settings))?s.settings:{};
     state=Object.assign(JSON.parse(JSON.stringify(DEFAULT_STATE)), clean, {settings:Object.assign({},DEFAULT_STATE.settings,safe)});
   }
+  // 이미지 복원: 새 형식(_images: id→base64) 또는 구 형식(visions[].imageUrl)
+  if(s._images){ for(const id in s._images){ try{ await idbPut(dataURLtoBlob(s._images[id]),'img_'+id); }catch(e){} } }
+  await migrateVisionImages();  // imageUrl이 남아 있으면 Blob으로
   if(await save()){ renderAll(); applyTheme(); applyFontSize(state.settings.fontSize); toast(mode==='merge'?'기존 데이터에 합쳤어요 ✅':'데이터를 불러왔어요 ✅'); }
 }
 
@@ -1855,6 +1890,7 @@ function renderAll(){ renderGoals(); renderDailyFilters(); renderDailies(); rend
 // 데이터(IndexedDB)를 먼저 비동기로 불러온 뒤 화면을 그린다
 async function boot(){
   state = await loadState();
+  await migrateVisionImages();  // 기존 base64 이미지를 Blob으로 이전
   applyTheme();
   applyFontSize(state.settings.fontSize);
   renderHeader();
@@ -1867,6 +1903,28 @@ async function boot(){
   else { backupNudge(); }
 }
 boot();
+// PWA 설치: 안드로이드 크롬은 beforeinstallprompt로 '앱 설치' 버튼 노출
+let deferredPrompt=null;
+window.addEventListener('beforeinstallprompt', e=>{
+  e.preventDefault(); deferredPrompt=e;
+  const b=document.getElementById('installBtn'); if(b) b.style.display='';
+});
+window.addEventListener('appinstalled', ()=>{
+  deferredPrompt=null;
+  const b=document.getElementById('installBtn'); if(b) b.style.display='none';
+  toast('앱이 설치됐어요 🎉');
+});
+async function installApp(){
+  if(deferredPrompt){
+    deferredPrompt.prompt();
+    try{ await deferredPrompt.userChoice; }catch(e){}
+    deferredPrompt=null;
+    const b=document.getElementById('installBtn'); if(b) b.style.display='none';
+  }else{
+    // iOS 사파리 등: 자동 설치 프롬프트가 없을 때
+    toast('홈 화면에 추가: 브라우저 공유 메뉴에서 "홈 화면에 추가"를 선택하세요 📲');
+  }
+}
 // PWA 서비스 워커 등록 (http/https에서만 — 로컬 file://에서는 동작 안 함)
 // 새 버전은 자동 적용하지 않고, 사용자가 안내에서 '새로고침'을 누를 때만 적용
 if('serviceWorker' in navigator && location.protocol.startsWith('http')){
